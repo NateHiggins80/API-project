@@ -7,6 +7,8 @@ const { setTokenCookie, restoreUser } = require('../../utils/auth');
 const { User } = require('../../db/models');
 const router = express.Router();
 
+
+
 router.post(
     '/',
     async (req, res, next) => {
@@ -40,6 +42,14 @@ router.post(
       return res.json({
         user: safeUser
       });
+    }
+  );
+
+  router.delete(
+    '/',
+    (_req, res) => {
+      res.clearCookie('XSRF-TOKEN');
+      return res.json({ message: 'success' });
     }
   );
 

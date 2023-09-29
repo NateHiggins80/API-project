@@ -49,11 +49,11 @@ const restoreUser = (req, res, next) => {
           }
         });
       } catch (e) {
-        res.clearCookie('token');
+        res.clearCookie('XSRF-TOKEN');
         return next();
       }
 
-      if (!req.user) res.clearCookie('token');
+      if (!req.user) res.clearCookie('XSRF-TOKEN');
 
       return next();
     });
@@ -69,5 +69,5 @@ const restoreUser = (req, res, next) => {
     return next(err);
   }
 
-  
+
   module.exports = { setTokenCookie, restoreUser, requireAuth };
