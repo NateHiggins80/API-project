@@ -49,11 +49,11 @@ const restoreUser = (req, res, next) => {
           }
         });
       } catch (e) {
-        res.clearCookie('XSRF-TOKEN');
+        res.clearCookie('token');
         return next();
       }
 
-      if (!req.user) res.clearCookie('XSRF-TOKEN');
+      if (!req.user) res.clearCookie('token');
 
       return next();
     });
