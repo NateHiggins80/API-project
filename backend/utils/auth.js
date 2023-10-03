@@ -69,5 +69,15 @@ const restoreUser = (req, res, next) => {
     return next(err);
   }
 
+  const authRole = function (req, _res, next) {
+    if (req.user) return next();
+
+    const err = new Error('Forbidden');
+    err.title = 'Authorization required';
+    err.errors = { message: 'Authorization required' };
+    err.status = 403;
+    return next(err);
+  }
+
 
   module.exports = { setTokenCookie, restoreUser, requireAuth };
