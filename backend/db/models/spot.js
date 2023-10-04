@@ -17,16 +17,19 @@ module.exports = (sequelize, DataTypes) => {
         OnDelete: "CASCADE",
         hooks: true
       });
-      Spot.hasOne(models.SpotImage, {
+      Spot.hasMany(models.SpotImage, {
         foreignKey: "spotId",
         onDelete: "CASCADE",
         hooks: true
       });
+      Spot.hasMany(models.Review, {
+        foreignKey: "spotId",
+      })
     }
   }
   Spot.init({
     ownerId: {
-      type: DataTypes.INTEGER(4),
+      type: DataTypes.INTEGER,
       allowNull: false,
       unique: true,
       references: {
