@@ -23,9 +23,7 @@ module.exports = {
       lng: 165.73634,
       name: "The Big Apple",
       description: 'We are the best at apples',
-      price: 599,
-      avgRating: 8.3,
-      previewImage: "https://www.vecteezy.com/vector-art/3267925-green-apple-cartoon-illustration-as-a-karate-fighter"
+      price: 599
     },
     {
       ownerId: 2,
@@ -37,9 +35,7 @@ module.exports = {
       lng: 60.99279,
       name: "Old Rockie",
       description: "A great place and a lot of rocks",
-      price: 250,
-      avgRating: 6.0,
-      previewImage: "https://www.flickr.com/photos/iphoneheadz/2696561615"
+      price: 250
     },
     {
       ownerId: 3,
@@ -51,9 +47,7 @@ module.exports = {
       lng: 38.63181,
       name: "Munster",
       description: "Super cheesey but delicious place",
-      price: 99,
-      avgRating: 3.1,
-      previewImage: 'https://www.budget101.com/wp-content/uploads/2017/02/5ca00e111d1f6_moldy-cheese-toss-it-or-save-it-.jpeg'
+      price: 99
     },
    ])
   },

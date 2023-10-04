@@ -47,12 +47,6 @@ module.exports = {
         type: Sequelize.INTEGER(7),
         allowNull: false,
       },
-      avgRating: {
-        type: Sequelize.DECIMAL
-      },
-      previewImage: {
-        type: Sequelize.STRING
-      },
       createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
