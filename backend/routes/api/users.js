@@ -38,15 +38,20 @@ router.post(
     async (req, res) => {
       const { email, password, username, firstName, lastName } = req.body;
       const hashedPassword = bcrypt.hashSync(password);
-      const user = await User.create({ email, username, firstName, lastName, hashedPassword });
+
 
       const errors = {};
 
       if (!firstName) errors.firsName = 'First Name is required';
       if (!lastName) errors.lastname = 'Last Name is required';
-      if (!email || !isValidEmail(email)) errors.email = "Invalid email";
+      if (!email) errors.email = "Invalid email";
       if (!username) errors.username = 'Username is required';
 
+      if (errors[0]) {
+        res.status(400).json(errors)
+      }
+
+      const user = await User.create({ email, username, firstName, lastName, hashedPassword });
 
       const safeUser = {
         id: user.id,
