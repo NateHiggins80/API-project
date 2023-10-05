@@ -1,8 +1,7 @@
 'use strict';
 
-let options = {
-  //schema: 'week_13_project'
-};
+let options ={};
+
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
 }
