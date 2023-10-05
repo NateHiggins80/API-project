@@ -14,15 +14,17 @@ const validateSignup = [
     check('email')
       .exists({ checkFalsy: true })
       .isEmail()
-      .withMessage('Please provide a valid email.'),
+      .withMessage('Invalid email'),
+
+
     check('username')
       .exists({ checkFalsy: true })
-      .isLength({ min: 4 })
-      .withMessage('Please provide a username with at least 4 characters.'),
-    check('username')
-      .not()
-      .isEmail()
-      .withMessage('Username cannot be an email.'),
+      .withMessage('Username is required.'),
+    check('firstName')
+      .exists({ checkFalsy: true }).withMessage("First Name is required"),
+    check('lastName')
+      .exists({ checkFalsy: true }).withMessage("Last Name is required"),
+
     check('password')
       .exists({ checkFalsy: true })
       .isLength({ min: 6 })
@@ -37,6 +39,14 @@ router.post(
       const { email, password, username, firstName, lastName } = req.body;
       const hashedPassword = bcrypt.hashSync(password);
       const user = await User.create({ email, username, firstName, lastName, hashedPassword });
+
+      const errors = {};
+
+      if (!firstName) errors.firsName = 'First Name is required';
+      if (!lastName) errors.lastname = 'Last Name is required';
+      if (!email || !isValidEmail(email)) errors.email = "Invalid email";
+      if (!username) errors.username = 'Username is required';
+
 
       const safeUser = {
         id: user.id,
