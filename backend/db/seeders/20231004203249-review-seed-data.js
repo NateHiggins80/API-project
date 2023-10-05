@@ -32,7 +32,7 @@ module.exports = {
       stars: 5
     },
     {
-      spotId: 4,
+      spotId: 1,
       userId: 1,
       review: "Wow this palce sure was cheesey!!!",
       stars: 5

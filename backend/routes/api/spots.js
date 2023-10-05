@@ -1,7 +1,7 @@
 const express = require('express');
 
 const { requireAuth } = require("../../utils/auth");
-const { Spot, User, SpotImage } = require('../../db/models');
+const { Spot, User, SpotImage, Review } = require('../../db/models');
 
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
@@ -11,6 +11,65 @@ const options = {};
 const router = express.Router();
 
 
+router.get('/current', requireAuth, async (req, res) => {
+    const { user } = req;
+
+        const yourSpots = await Spot.findAll({
+            where: {
+                ownerId: user.id
+            }
+        });
+
+        res.status(200).json(yourSpots);
+});
+
+
+router.get('/:spotId', async(req, res) => {
+    const { spotId } = req.params
+
+    const spot = await Spot.findByPk( spotId, {
+        include:
+        [
+            {
+                model: SpotImage,
+                attributes: ['id', 'url', 'preview'],
+            },
+            {
+                model: User,
+                as: 'Owner',
+                attributes: ['id', 'firstName', 'lastName']
+            },
+
+        ],
+    });
+
+    if (!spot) {
+        res.status(404);
+        res.json(
+            {
+            "message": "Spot couldn't be found"
+            }
+        )
+    };
+
+    const result = spot.toJSON();
+
+    const reviews = await Review.count({
+         where: {
+            spotId: spotId
+         }
+    });
+
+    const sumReview = await Review.sum( 'stars', {
+        where: {
+                spotId: spot.id
+            }
+    });
+   result.numReviews = reviews;
+   result.avgRating = sumReview / reviews;
+
+    res.json(result);
+});
 
 router.get('/:spotId', async (req, res) => {
     try {
@@ -32,22 +91,6 @@ router.get('/:spotId', async (req, res) => {
         })
     }
   });
-
-
-
-router.get('/current', requireAuth, async (req, res) => {
-    const { user } = req;
-
-        const yourSpots = await Spot.findAll({
-            where: {
-                ownerId: user.id
-            }
-        });
-
-        res.status(200).json(yourSpots);
-});
-
-
 
 router.get('/', async (req, res) => {
 
