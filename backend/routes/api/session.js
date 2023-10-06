@@ -47,6 +47,19 @@ router.post(
     async (req, res, next) => {
       const { credential, password } = req.body;
 
+      const errors = {}
+
+      if (!password) errors.password = 'Password is required';
+
+      if (!credential) errors.password = 'Email or username is required';
+
+      if (Object.keys(errors).length > 0) {
+        return res.status(400).json({
+          message: 'Bad Request',
+          errors,
+        });
+      }
+  
       const user = await User.unscoped().findOne({
         where: {
           [Op.or]: {
