@@ -1,5 +1,5 @@
 'use strict';
-const { Review } = require('../models');
+const { Booking } = require('../models');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
@@ -12,33 +12,38 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-   await Review.bulkCreate([
-    {
-      spotId: 2,
-      userId: 1,
-      review: "I seen better",
-      stars: 1
-    },
-    {
-      spotId: 2,
-      userId: 2,
-      review: "This palce was the bee's knees",
-      stars: 4
-    },
+   await Booking.bulkCreate([
     {
       spotId: 3,
-      userId: 1,
-      review: "My grandma died here during our stay. I will neve be the same",
-      stars: 5
+      userId: 2,
+      startDate: '2022-12-27',
+      endDate: '2023-01-05'
     },
     {
       spotId: 1,
-      userId: 2,
-      review: "Wow this palce sure was cheesey!!!",
-      stars: 5
+      userId: 3,
+      startDate: '2023-03-10',
+      endDate: '2023-03-17'
     },
-
-  ])
+    {
+      spotId: 2,
+      userId: 1,
+      startDate: '2023-06-13',
+      endDate: '2023-07-02'
+    },
+    {
+      spotId: 1,
+      userId: 4,
+      startDate: '2023-10-28',
+      endDate: '2023-11-06'
+    },
+    {
+      spotId: 2,
+      userId: 1,
+      startDate: '2024-09-21',
+      endDate: '2024-10-11'
+    },
+   ])
   },
 
   async down (queryInterface, Sequelize) {

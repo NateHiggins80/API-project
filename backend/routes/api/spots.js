@@ -1,7 +1,8 @@
 const express = require('express');
 
 const { requireAuth } = require("../../utils/auth");
-const { Spot, User, SpotImage, Review } = require('../../db/models');
+const { Spot, User, SpotImage, Review, ReviewImage, Booking } = require('../../db/models');
+const { validationResult ,check } = require('express-validator');
 const Sequelize = require('sequelize')
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
@@ -10,6 +11,163 @@ const options = {};
 
 const router = express.Router();
 
+
+
+//Create a Booking from a Spot based on the Spot's id
+router.post('/:spotId/bookings', requireAuth, async (req, res) => {
+  const { startDate, endDate } = req.body;
+  const spotId = req.params.spotId;
+  const userId = req.user.id;
+
+  // Parse the date strings into Date objects
+  const parsedStartDate = new Date(startDate);
+  const parsedEndDate = new Date(endDate);
+
+  // Check if start date is before end date
+  if (parsedStartDate >= parsedEndDate) {
+    return res.status(400).json({
+      message: 'Bad Request',
+      errors: {
+        endDate: 'endDate cannot be on or before startDate',
+      },
+    });
+  }
+    // Check if the spot exists
+    const spot = await Spot.findByPk(spotId);
+    if (!spot) {
+      return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    // Check for conflicts in booking request
+    const conflictBooking = await Booking.findOne({
+      where: {
+        spotId,
+        [Op.or]: [
+          {
+            startDate: {
+              [Op.between]: [parsedStartDate, parsedEndDate],
+            },
+          },
+          {
+            endDate: {
+              [Op.between]: [parsedStartDate, parsedEndDate],
+            },
+          },
+        ],
+      },
+    });
+
+    if (conflictBooking) {
+      return res.status(403).json({
+        message: 'Sorry, this spot is already booked for the specified dates',
+        errors: {
+          startDate: 'Start date conflicts with an existing booking',
+          endDate: 'End date conflicts with an existing booking',
+        },
+      });
+    }
+
+    // All conflicts handled create the booking
+    const newBooking = await Booking.create({
+      userId,
+      spotId,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
+    });
+
+    return res.status(200).json(newBooking);
+});
+
+
+
+router.post('/:spotId/reviews', requireAuth, async (req, res) => {
+  const { review, stars } = req.body;
+  const { spotId } = req.params;
+  const userId = req.user.id;
+
+  // Check if review text is empty
+  if (!review) {
+    return res.status(400).json({ message: 'Review text is required' });
+  }
+
+  // Check if stars is not an integer between 1 and 5
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+    return res.status(400).json({ message: 'Stars must be an integer from 1 to 5' });
+  }
+
+  try {
+    // Check if the spot exists
+    const spot = await Spot.findByPk(spotId);
+    if (!spot) {
+      return res.status(404).json({ message: 'Spot couldn\'t be found' });
+    }
+
+    // Check if the user already has a review for this spot
+    const existingReview = await Review.findOne({
+      where: {
+        spotId,
+        userId,
+      }
+    });
+
+    if (existingReview) {
+      return res.status(403).json({ message: 'User already has a review for this spot' });
+    }
+
+    // Create the review
+    const createdReview = await Review.create({
+      userId,
+      spotId,
+      review,
+      stars,
+    });
+
+    return res.status(201).json(createdReview);
+  } catch (error) {
+    console.error('Error creating review:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+//Get all Reviews By a Spot's id
+router.get("/:spotId/reviews", async (req, res) => {
+  try {
+    const { spotId } = req.params;
+
+    // Query the database to retrieve reviews for the specified spot
+    const reviews = await Review.findAll({
+      where: {
+        spotId: spotId
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'firstName', 'lastName']
+        },
+        {
+          model: ReviewImage,
+          attributes: ['id', 'url']
+        }
+      ]
+    });
+
+    if (reviews.length === 0) {
+      return res.status(404).json({
+        message: "Spot couldn't be found"
+      });
+    }
+
+    // Format the response with the Reviews
+    const formattedResponse = {
+      Reviews: reviews
+    };
+
+    res.status(200).json(formattedResponse);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 router.get('/current', requireAuth, async (req, res) => {
     const { user } = req;
@@ -115,6 +273,64 @@ router.get('/:spotId', async(req, res) => {
    result.avgRating = sumReview / reviews;
 
     res.json(result);
+});
+
+// Get all spots with query filters
+router.get('/spots', async (req, res) => {
+  const { page = 1, size = 20, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+
+  // Validate query parameters
+  const errors = {};
+  if (isNaN(+page) || +page < 1 || +page > 10) {
+    errors.page = 'Page must be an integer between 1 and 10';
+  }
+  if (isNaN(+size) || +size < 1 || +size > 20) {
+    errors.size = 'Size must be an integer between 1 and 20';
+  }
+  if (minLat && isNaN(+minLat)) {
+    errors.minLat = 'Minimum latitude is invalid';
+  }
+  if (maxLat && isNaN(+maxLat)) {
+    errors.maxLat = 'Maximum latitude is invalid';
+  }
+  if (minLng && isNaN(+minLng)) {
+    errors.minLng = 'Minimum longitude is invalid';
+  }
+  if (maxLng && isNaN(+maxLng)) {
+    errors.maxLng = 'Maximum longitude is invalid';
+  }
+  if (minPrice && isNaN(+minPrice) || +minPrice < 0) {
+    errors.minPrice = 'Minimum price must be greater than or equal to 0';
+  }
+  if (maxPrice && isNaN(+maxPrice) || +maxPrice < 0) {
+    errors.maxPrice = 'Maximum price must be greater than or equal to 0';
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ message: 'Bad Request', errors });
+  }
+
+  const spots = await Spot.findAll({
+    where: {
+      ...(minLat && { lat: { [Op.gte]: +minLat } }),
+      ...(maxLat && { lat: { [Op.lte]: +maxLat } }),
+      ...(minLng && { lng: { [Op.gte]: +minLng } }),
+      ...(maxLng && { lng: { [Op.lte]: +maxLng } }),
+      ...(minPrice && { price: { [Op.gte]: +minPrice } }),
+      ...(maxPrice && { price: { [Op.lte]: +maxPrice } }),
+    },
+    limit: +size,
+    offset: (+page - 1) * +size,
+  });
+
+  const totalSpots = await Spot.count();
+
+  return res.status(200).json({
+    Spots: spots,
+    page: +page,
+    size: +size,
+    totalSpots,
+  });
 });
 
 //GET ALL SPOTS
@@ -345,6 +561,27 @@ router.post('/', requireAuth, async (req, res) => {
     }
 });
 
+
+router.delete('/spots/:spotId/images/:imageId', requireAuth, async (req, res) => {
+  const { spotId, imageId } = req.params;
+
+  const spot = await Spot.findByPk(spotId);
+  if (!spot) {
+    return res.status(404).json({ message: 'Spot not found' });
+  }
+
+  if (spot.ownerId !== req.user.id) {
+    return res.status(403).json({ message: 'You are not authorized to delete this image' });
+  }
+
+  const deletedImage = await SpotImage.destroy({ where: { id: imageId } });
+
+  if (!deletedImage) {
+    return res.status(404).json({ message: 'Image not found' });
+  }
+
+  return res.status(200).json({ message: 'Image successfully deleted' });
+});
 
 router.delete('/:spotId', requireAuth, async (req, res) => {
     const { spotId } = req.params;
