@@ -1,6 +1,11 @@
 'use strict';
 
 let options ={};
+options.tableName = "Reviews";
+
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -42,6 +47,6 @@ module.exports = {
     );
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Reviews');
+    await queryInterface.dropTable(options);
   }
 };

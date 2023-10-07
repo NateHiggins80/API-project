@@ -1,10 +1,12 @@
 'use strict';
 
 let options ={};
+options.tableName = "Users";
 
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
 }
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -48,13 +50,10 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     }, options);
-
-    //await queryInterface.addIndex('Users', ['usernameId'], ['emailId']);
-
   },
 
   async down(queryInterface, Sequelize) {
-    options.tableName = "Users";
+
     return queryInterface.dropTable(options);
   }
 };

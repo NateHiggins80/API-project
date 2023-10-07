@@ -1,4 +1,12 @@
 'use strict';
+
+let options ={};
+options.tableName = "Reviews";
+
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
+
 const { Review } = require('../models');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -38,7 +46,7 @@ module.exports = {
       stars: 5
     },
 
-  ])
+  ], options)
   },
 
   async down (queryInterface, Sequelize) {
@@ -48,6 +56,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("Reviews");
+    return queryInterface.dropTable(options);
   }
 };
