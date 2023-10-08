@@ -34,11 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     ownerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true,
-      references: {
-        model: "Users",
-        key: "id"
-      }
+      unique: true
     },
     address: {
       type: DataTypes.STRING(255),
