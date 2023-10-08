@@ -1,7 +1,7 @@
 'use strict';
 
 let options ={};
-options.tableName = "Reviews";
+options.tableName = "Bookings";
 
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Reviews', {
+    await queryInterface.createTable('Bookings', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -19,19 +19,18 @@ module.exports = {
       },
       spotId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-
+        allowNull: false
       },
       userId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-
+        allowNull: false
       },
-      review: {
-        type: Sequelize.STRING
+      startDate: {
+        type: Sequelize.DATE,
+        allowNull: false
       },
-      stars: {
-        type: Sequelize.INTEGER,
+      endDate: {
+        type: Sequelize.DATE,
         allowNull: false
       },
       createdAt: {
@@ -42,9 +41,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       }
-    },
-      options
-    );
+    }, options);
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable(options);

@@ -1,4 +1,12 @@
 'use strict';
+
+let options ={};
+options.tableName = "Reviews";
+
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
+
 const { Review } = require('../models');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -14,7 +22,7 @@ module.exports = {
     */
    await Review.bulkCreate([
     {
-      spotId: 1,
+      spotId: 2,
       userId: 1,
       review: "I seen better",
       stars: 1
@@ -27,18 +35,18 @@ module.exports = {
     },
     {
       spotId: 3,
-      userId: 3,
+      userId: 1,
       review: "My grandma died here during our stay. I will neve be the same",
       stars: 5
     },
     {
       spotId: 1,
-      userId: 1,
+      userId: 2,
       review: "Wow this palce sure was cheesey!!!",
       stars: 5
     },
 
-  ])
+  ], options)
   },
 
   async down (queryInterface, Sequelize) {
@@ -48,6 +56,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete("Reviews");
+    return queryInterface.dropTable(options);
   }
 };

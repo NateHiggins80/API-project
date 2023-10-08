@@ -1,6 +1,10 @@
 'use strict';
 
 let options ={};
+options.tableName = "SpotImages";
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -19,7 +23,8 @@ module.exports = {
         references: {
           model: "Spots",
           key: "id"
-        }
+        },
+        onDelete: 'CASCADE'
       },
       url: {
         type: Sequelize.STRING,
@@ -42,6 +47,6 @@ module.exports = {
     );
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('SpotImages');
+    await queryInterface.dropTable(options);
   }
 };
