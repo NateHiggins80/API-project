@@ -51,7 +51,7 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
     const review = await Review.findOne({
       where: {
         id: reviewId,
-        userId: userId, // Ensure the review belongs to the current user
+        userId: userId,
       },
     });
 
@@ -59,7 +59,6 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Review couldn't be found" });
     }
 
-    // Check the number of images associated with the review
     const imageCount = await ReviewImage.count({
       where: { reviewId },
     });
@@ -87,11 +86,11 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
     const userId = req.user.id;
 
     try {
-      // Check if the review exists
+
       const existingReview = await Review.findOne({
         where: {
           id: reviewId,
-          userId, // Ensure the review belongs to the current user
+          userId,
         },
       });
 
@@ -125,7 +124,7 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
     Review.findOne({
       where: {
         id: reviewId,
-        userId, // Ensure the review belongs to the current user
+        userId, 
       },
     })
       .then((review) => {
