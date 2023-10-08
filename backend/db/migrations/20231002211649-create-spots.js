@@ -18,7 +18,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       ownerId: {
-        type: Sequelize.INTEGER(4),
+        type: Sequelize.INTEGER,
         allowNull: false
       },
       address: {
@@ -52,7 +52,7 @@ module.exports = {
         allowNull: false
       },
       price: {
-        type: Sequelize.INTEGER(7),
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
       createdAt: {

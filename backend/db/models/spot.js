@@ -76,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     price: {
-      type: DataTypes.INTEGER(7),
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
 
