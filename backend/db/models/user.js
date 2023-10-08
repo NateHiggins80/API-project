@@ -69,7 +69,7 @@ module.exports = (sequelize, DataTypes) => {
         exclude: ["hashedPassword", "email", "createdAt", "updatedAt"]
       }
     },
-    schema: 'airbnb',
+    //schema: 'airbnb',
   });
   return User;
 };
