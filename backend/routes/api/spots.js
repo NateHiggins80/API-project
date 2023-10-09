@@ -176,35 +176,13 @@ router.get('/current', requireAuth, async (req, res) => {
     where: {
       ownerId: user.id
     },
-    attributes: [
-      'id',
-      'ownerId',
-      'address',
-      'city',
-      'state',
-      'country',
-      'lat',
-      'lng',
-      'name',
-      'description',
-      'price',
-      'createdAt',
-      'updatedAt',
-      [sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating']
-    ],
     include: [
-      {
-        model: Review,
-        attributes: [],
-        as: 'Reviews'
-      },
       {
         model: SpotImage,
         attributes: ['url'],
         as: 'SpotImages'
       }
-    ],
-    group: ['Spot.id', 'SpotImages.id'] 
+    ]
   });
 
   const formattedSpots = spots.map(spot => ({
@@ -221,12 +199,14 @@ router.get('/current', requireAuth, async (req, res) => {
     price: spot.price,
     createdAt: spot.createdAt,
     updatedAt: spot.updatedAt,
-    avgRating: spot.getDataValue('avgRating'),
+    avgRating: null, // For spots, we don't have an average rating
     previewImage: spot.SpotImages.length > 0 ? spot.SpotImages[0].url : null
   }));
 
   res.status(200).json({ Spots: formattedSpots });
 });
+
+
 
 
 router.get('/:spotId', async(req, res) => {
