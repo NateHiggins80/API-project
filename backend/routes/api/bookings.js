@@ -147,40 +147,30 @@ router.put('/:bookingId', requireAuth, async (req, res) => {
 
   // Delete a Booking
 
-  router.delete('/:bookingId', requireAuth, async (req, res) => {
-    const bookingId = req.params.bookingId;
-    const userId = req.user.id;
+  router.delete('/:bookingId', async (req, res) => {
+    const bookingId = parseInt(req.params.bookingId);
 
-    const booking = await Booking.findByPk(bookingId, {
-      include: {
-        model: Spot,
-        attributes: ['userId'],
-      },
-    });
+    const booking = await Booking.findByPk(bookingId);
 
     if (!booking) {
-      return res.status(404).json({ message: "Booking couldn't be found" });
-    }
-
-    //const isBookingOwner = booking.userId === userId;
-    const isBookingOwner = booking.ownerId === userId;
-    //const isSpotOwner = booking.Spot.userId === userId;
-    const isSpotOwner = booking.Spot.ownerId === userId;
-
-    if (!isBookingOwner && !isSpotOwner) {
-      return res.status(403).json({ message: "You are not authorized to delete this booking" });
+      return res.status(404).json({ message: 'Booking couldn\'t be found' });
     }
 
     const currentDate = new Date();
     const bookingStartDate = new Date(booking.startDate);
-
-    if (bookingStartDate < currentDate) {
-      return res.status(403).json({ message: "Bookings that have been started can't be deleted" });
+    if (currentDate >= bookingStartDate) {
+      return res.status(403).json({ message: 'Bookings that have been started can\'t be deleted' });
     }
 
-    await Booking.destroy({ where: { id: bookingId } });
+    if (booking.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized to delete this booking' });
+    }
+
+    await booking.destroy();
+
     return res.status(200).json({ message: 'Successfully deleted' });
-});
+  });
+
 
 
 module.exports = router;
