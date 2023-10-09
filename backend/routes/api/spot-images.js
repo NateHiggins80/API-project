@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
-const SpotImage = require('../models').SpotImage;
+const { SpotImage, Spot } = require('../../db/models');
 
 // Delete a Spot Image
 router.delete('/:imageId', requireAuth, async (req, res) => {
