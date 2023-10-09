@@ -170,24 +170,26 @@ router.get("/:spotId/reviews", async (req, res) => {
 });
 
 router.get('/current', requireAuth, async (req, res) => {
-    const { user } = req;
+  const { user } = req;
 
-    const spots = await Spot.findAll({
-      where: {
-        ownerId: user.id
+  const spots = await Spot.findAll({
+    where: {
+      ownerId: user.id
+    },
+    include: [
+      {
+        model: Review,
+        attributes: [[sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating']],
+        as: 'Reviews'  
       },
-      include: [
-        {
-          model: Review,
-          attributes: [['stars', 'avgRating']]
-        },
-        {
-          model: SpotImage,
-          attributes: [['url', 'previewImage']]
-        }
-      ],
-      group: ['Spot.id']
-    });
+      {
+        model: SpotImage,
+        attributes: ['url'],
+        as: 'SpotImages'
+      }
+    ],
+    group: ['Spot.id', 'Reviews.id', 'SpotImages.url']
+  });
 
     const formattedSpots = [];
     for (const spot of spots) {
