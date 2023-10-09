@@ -161,9 +161,9 @@ router.put('/:bookingId', requireAuth, async (req, res) => {
     }
 
     //const isBookingOwner = booking.userId === userId;
-    const isBookingOwner = booking.ownerId === ownerId;
+    const isBookingOwner = booking.ownerId === userId;
     //const isSpotOwner = booking.Spot.userId === userId;
-    const isSpotOwner = booking.Spot.ownerId === ownerId;
+    const isSpotOwner = booking.Spot.ownerId === userId;
 
     if (!isBookingOwner && !isSpotOwner) {
       return res.status(403).json({ message: "You are not authorized to delete this booking" });
