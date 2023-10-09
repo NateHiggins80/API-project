@@ -31,17 +31,17 @@ module.exports = {
     {
       spotId: 1,
       url: 'https://media.tenor.com/n3jzz4VgdY4AAAAC/apple-emotion-terrified.gif',
-      preview: true
+      preview: false
     },
     {
       spotId: 2,
       url: 'https://preview.redd.it/w9efjf45swb21.jpg?width=960&crop=smart&auto=webp&s=701089f3bbad4168b1b12325b3844e9e3dbca35a',
-      preview: true
+      preview: false
     },
     {
       spotId: 3,
       url: 'https://img.freepik.com/premium-photo/city-made-cheese-generative-ai_384720-4723.jpg?w=1060',
-      preview: true
+      preview: false
     },
     {
       spotId: 4,

@@ -435,47 +435,85 @@ router.get('/:spotId', async (req, res) => {
 
   //ADD IMAGE TO SPOT BASED ON ID
 
-  router.post("/:spotId/images", requireAuth, async (req, res) => {
-    const { url, preview } = req.body;
-    const spotId = req.params.spotId;
-    const userId = req.user.id;  // Assuming user id is in req.user.id
+  // router.post("/:spotId/images", requireAuth, async (req, res) => {
+  //   const { url, preview } = req.body;
+  //   const spotId = req.params.spotId;
+  //   const userId = req.user.id;  // Assuming user id is in req.user.id
 
-    // Check if the spot exists and belongs to the current user
-    const spot = await Spot.findOne({
-      where: {
-        id: spotId,
-        ownerId: userId
-      }
-    });
+  //   // Check if the spot exists and belongs to the current user
+  //   const spot = await Spot.findOne({
+  //     where: {
+  //       id: spotId,
+  //       ownerId: userId
+  //     }
+  //   });
+
+  //   if (!spot) {
+  //     return res.status(404).json({
+  //       message: "Spot couldn't be found"
+  //     });
+  //   }
+
+  //   // Create the spot image
+  //   try {
+  //     const spotImage = await SpotImage.create({
+  //       url,
+  //       preview,
+  //       spotId
+  //     });
+
+  //     // Return the image data including id, url, and preview
+  //     res.status(200).json({
+  //       id: spotImage.id,
+  //       url: spotImage.url,
+  //       preview: spotImage.preview
+  //     });
+  //   } catch (error) {
+  //     console.error('Error adding image:', error);
+  //     res.status(500).json({
+  //       message: "An error occurred while adding the image"
+  //     });
+  //   }
+  // });
+  router.post('/:spotId/images', requireAuth, async(req, res) => {
+    const {user} = req;
+    const {url, preview} = req.body;
+
+    // finding spot:
+    let spot = await Spot.findByPk(req.params.spotId);
 
     if (!spot) {
-      return res.status(404).json({
-        message: "Spot couldn't be found"
-      });
+    res.status(404);
+    return res.json({message: "Spot couldn't be found"})
     }
 
-    // Create the spot image
-    try {
-      const spotImage = await SpotImage.create({
-        url,
-        preview,
-        spotId
-      });
-
-      // Return the image data including id, url, and preview
-      res.status(200).json({
-        id: spotImage.id,
-        url: spotImage.url,
-        preview: spotImage.preview
-      });
-    } catch (error) {
-      console.error('Error adding image:', error);
-      res.status(500).json({
-        message: "An error occurred while adding the image"
-      });
+    // confirming that user owns the spot:
+    if (user.id !== spot.ownerId) {
+    res.status(403);
+    return res.json({message: "Only owner can add an image"})
     }
-  });
 
+
+    // creating a new image in spot:
+    if (user.id === spot.ownerId) {
+    const image = await spot.createSpotImage({
+    url: url,
+    preview: preview
+    });
+
+    await image.save();
+
+    let response = {};
+
+    response.id = image.id;
+    response.url = image.url;
+    response.preview = image.preview;
+
+
+    res.status(200);
+    res.json(response);
+    }
+    })
 
 
 // CREATE SPOT
