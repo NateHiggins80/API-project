@@ -29,9 +29,9 @@ module.exports = {
       preview: true
     },
     {
-      spotId: 1,
+      spotId: 11,
       url: 'https://media.tenor.com/n3jzz4VgdY4AAAAC/apple-emotion-terrified.gif',
-      preview: false
+      preview: true
     },
     {
       spotId: 2,
