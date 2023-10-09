@@ -224,10 +224,6 @@ router.get('/current', requireAuth, async (req, res) => {
   res.status(200).json({ Spots: formattedSpots });
 });
 
-module.exports = router;
-
-
-
 
 //Get Details of a spot by ID
 router.get('/:spotId', async(req, res) => {
