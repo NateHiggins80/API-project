@@ -194,12 +194,7 @@ router.get('/current', requireAuth, async (req, res) => {
       'updatedAt',
     ],
     include: [
-      // Include any other related models you need for this response
-      // Example:
-      // {
-      //   model: PreviewImage,
-      //   attributes: ['url'],
-      // },
+    
     ],
   });
 
@@ -217,8 +212,8 @@ router.get('/current', requireAuth, async (req, res) => {
     price: spot.price,
     createdAt: spot.createdAt,
     updatedAt: spot.updatedAt,
-    avgRating: 4.5, // Replace with actual average rating
-    previewImage: 'image url', // Replace with actual preview image URL
+    avgRating: 4.5,
+    previewImage: 'image url',
   }));
 
   res.status(200).json({ Spots: formattedSpots });

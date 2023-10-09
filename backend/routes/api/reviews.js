@@ -10,36 +10,65 @@ const { handleValidationErrors } = require('../../utils/validation');
 const router = express.Router();
 
 router.get("/current", requireAuth, async (req, res) => {
-    try {
-        const { user } = req;
+  const { user } = req;
 
-        const reviews = await Review.findAll({
-            where: {
-                userId: user.id
-            },
-            include: [
-                {
-                    model: User,
-                    attributes: ['id', 'firstName', 'lastName']
-                },
-                {
-                    model: Spot,
-                    attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price', 'previewImage']
-                },
-                {
-                    model: ReviewImage,
-                    attributes: ['id', 'url']
-                }
-            ]
-        });
+  const reviews = await Review.findAll({
+      where: {
+          userId: user.id
+      },
+      include: [
+          {
+              model: User,
+              attributes: ['id', 'firstName', 'lastName']
+          },
+          {
+              model: Spot,
+              attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price', 'previewImage']
+          },
+          {
+              model: ReviewImage,
+              attributes: ['id', 'url']
+          }
+      ]
+  });
 
-        res.json({ Reviews: reviews });
-    } catch (error) {
-        res.status(404).json({
-            message: "Reviews couldn't be found"
-        });
-    }
+  const formattedReviews = reviews.map(review => ({
+      id: review.id,
+      userId: review.userId,
+      spotId: review.spotId,
+      review: review.review,
+      stars: review.stars,
+      createdAt: review.createdAt,
+      updatedAt: review.updatedAt,
+      User: {
+          id: review.User.id,
+          firstName: review.User.firstName,
+          lastName: review.User.lastName
+      },
+      Spot: {
+          id: review.Spot.id,
+          ownerId: review.Spot.ownerId,
+          address: review.Spot.address,
+          city: review.Spot.city,
+          state: review.Spot.state,
+          country: review.Spot.country,
+          lat: review.Spot.lat,
+          lng: review.Spot.lng,
+          name: review.Spot.name,
+          price: review.Spot.price,
+          previewImage: review.Spot.previewImage
+      },
+      ReviewImages: [
+          {
+              id: review.ReviewImages[0].id,
+              url: review.ReviewImages[0].url
+          }
+      ]
+  }));
+
+  res.json({ Reviews: formattedReviews });
 });
+
 
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
@@ -124,7 +153,7 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
     Review.findOne({
       where: {
         id: reviewId,
-        userId, 
+        userId,
       },
     })
       .then((review) => {

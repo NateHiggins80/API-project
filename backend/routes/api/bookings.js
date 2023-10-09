@@ -1,6 +1,6 @@
 const express = require('express');
 const { requireAuth } = require('../../utils/auth');
-const { Booking, Spot } = require('../../db/models');
+const { Booking, Spot, User } = require('../../db/models');
 
 const router = express.Router();
 
@@ -144,7 +144,8 @@ router.put('/:bookingId', requireAuth, async (req, res) => {
   });
 
   // Delete a Booking
-router.delete('/:bookingId', requireAuth, async (req, res) => {
+
+  router.delete('/:bookingId', requireAuth, async (req, res) => {
     const bookingId = req.params.bookingId;
     const userId = req.user.id;
 
@@ -159,10 +160,11 @@ router.delete('/:bookingId', requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Booking couldn't be found" });
     }
 
-    const isBookingOwner = booking.userId === userId;
-    const isSpotOwner = booking.Spot.userId === userId;
+    //const isBookingOwner = booking.userId === userId;
+    const isBookingOwner = booking.ownerId === ownerId;
+    //const isSpotOwner = booking.Spot.userId === userId;
+    const isSpotOwner = booking.Spot.ownerId === ownerId;
 
-    // Check if the user is the booking owner or the spot owner
     if (!isBookingOwner && !isSpotOwner) {
       return res.status(403).json({ message: "You are not authorized to delete this booking" });
     }
@@ -170,13 +172,13 @@ router.delete('/:bookingId', requireAuth, async (req, res) => {
     const currentDate = new Date();
     const bookingStartDate = new Date(booking.startDate);
 
-    // Check if the booking start date
     if (bookingStartDate < currentDate) {
       return res.status(403).json({ message: "Bookings that have been started can't be deleted" });
     }
 
     await Booking.destroy({ where: { id: bookingId } });
     return res.status(200).json({ message: 'Successfully deleted' });
-  });
+});
+
 
 module.exports = router;
