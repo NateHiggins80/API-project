@@ -176,11 +176,27 @@ router.get('/current', requireAuth, async (req, res) => {
     where: {
       ownerId: user.id
     },
+    attributes: [
+      'id',
+      'ownerId',
+      'address',
+      'city',
+      'state',
+      'country',
+      'lat',
+      'lng',
+      'name',
+      'description',
+      'price',
+      'createdAt',
+      'updatedAt',
+      [sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating']
+    ],
     include: [
       {
         model: Review,
-        attributes: [[sequelize.fn('AVG', sequelize.col('Reviews.stars')), 'avgRating']],
-        as: 'Reviews'  
+        attributes: [],
+        as: 'Reviews'
       },
       {
         model: SpotImage,
@@ -188,46 +204,29 @@ router.get('/current', requireAuth, async (req, res) => {
         as: 'SpotImages'
       }
     ],
-    group: ['Spot.id', 'Reviews.id', 'SpotImages.url']
+    group: ['Spot.id', 'SpotImages.id'] 
   });
 
-    const formattedSpots = [];
-    for (const spot of spots) {
-      const spotJson = spot.toJSON();
-      let avgRating = null;
-      let previewImage = null;
+  const formattedSpots = spots.map(spot => ({
+    id: spot.id,
+    ownerId: spot.ownerId,
+    address: spot.address,
+    city: spot.city,
+    state: spot.state,
+    country: spot.country,
+    lat: spot.lat,
+    lng: spot.lng,
+    name: spot.name,
+    description: spot.description,
+    price: spot.price,
+    createdAt: spot.createdAt,
+    updatedAt: spot.updatedAt,
+    avgRating: spot.getDataValue('avgRating'),
+    previewImage: spot.SpotImages.length > 0 ? spot.SpotImages[0].url : null
+  }));
 
-      if (spotJson.Reviews.length > 0) {
-        avgRating = spotJson.Reviews[0].avgRating;
-      }
-
-      if (spotJson.SpotImages.length > 0) {
-        previewImage = spotJson.SpotImages[0].previewImage;
-      }
-
-      const formattedSpot = {
-        id: spotJson.id,
-        ownerId: spotJson.ownerId,
-        address: spotJson.address,
-        city: spotJson.city,
-        state: spotJson.state,
-        country: spotJson.country,
-        lat: spotJson.lat,
-        lng: spotJson.lng,
-        name: spotJson.name,
-        description: spotJson.description,
-        price: spotJson.price,
-        createdAt: spotJson.createdAt,
-        updatedAt: spotJson.updatedAt,
-        avgRating,
-        previewImage
-      };
-
-      formattedSpots.push(formattedSpot);
-    }
-
-    res.status(200).json({ Spots: formattedSpots });
-  });
+  res.status(200).json({ Spots: formattedSpots });
+});
 
 
 router.get('/:spotId', async(req, res) => {
