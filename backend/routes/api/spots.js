@@ -79,7 +79,7 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
 });
 
 
-
+//Creat a Spot Review
 router.post('/:spotId/reviews', requireAuth, async (req, res) => {
   const { review, stars } = req.body;
   const { spotId } = req.params;
@@ -184,8 +184,8 @@ router.get('/current', requireAuth, async (req, res) => {
           as: 'SpotImages'
         },
         {
-          model: Review,  // Include the Review model
-          attributes: ['id', 'review', 'stars'],  // Add necessary attributes
+          model: Review,
+          attributes: ['id', 'review', 'stars'],
           include: [
             {
               model: User,
@@ -225,9 +225,6 @@ router.get('/current', requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
-
-
 
 
 router.get('/:spotId', async(req, res) => {
@@ -417,25 +414,26 @@ router.get('/:spotId', async (req, res) => {
     const spotId = req.params.spotId;
     const userId = req.user.id;  // Assuming user id is in req.user.id
 
-    // Check if the spot exists and belongs to the current user
-    const spot = await Spot.findOne({
-      where: {
-        id: spotId,
-        ownerId: userId
-      }
-    });
-
-    if (!spot) {
-      return res.status(404).json({
-        message: "Spot couldn't be found"
-      });
-    }
-
     try {
+      // Check if the spot exists and belongs to the current user
+      const spot = await Spot.findOne({
+        where: {
+          id: spotId,
+          ownerId: userId
+        }
+      });
+
+      if (!spot) {
+        return res.status(404).json({
+          message: "Spot couldn't be found"
+        });
+      }
+
+      // Create the spot image
       const spotImage = await SpotImage.create({
         url,
         preview,
-        spotId  // Assign the spot ID to the image
+        spotId
       });
 
       // Return the image data including id, url, and preview
@@ -445,6 +443,7 @@ router.get('/:spotId', async (req, res) => {
         preview: spotImage.preview
       });
     } catch (error) {
+      console.error('Error adding image:', error);
       res.status(500).json({
         message: "An error occurred while adding the image"
       });
