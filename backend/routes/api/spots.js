@@ -168,43 +168,64 @@ router.get("/:spotId/reviews", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
+//GET CURRENT
 router.get('/current', requireAuth, async (req, res) => {
   const { user } = req;
 
-  const spots = await Spot.findAll({
-    where: {
-      ownerId: user.id
-    },
-    include: [
-      {
-        model: SpotImage,
-        attributes: ['url'],
-        as: 'SpotImages'
-      }
-    ]
-  });
+  try {
+    const spots = await Spot.findAll({
+      where: {
+        ownerId: user.id
+      },
+      include: [
+        {
+          model: SpotImage,
+          attributes: ['url'],
+          as: 'SpotImages'
+        },
+        {
+          model: Review,  // Include the Review model
+          attributes: ['id', 'review', 'stars'],  // Add necessary attributes
+          include: [
+            {
+              model: User,
+              attributes: ['id', 'firstName', 'lastName']
+            }
+          ]
+        }
+      ]
+    });
 
-  const formattedSpots = spots.map(spot => ({
-    id: spot.id,
-    ownerId: spot.ownerId,
-    address: spot.address,
-    city: spot.city,
-    state: spot.state,
-    country: spot.country,
-    lat: spot.lat,
-    lng: spot.lng,
-    name: spot.name,
-    description: spot.description,
-    price: spot.price,
-    createdAt: spot.createdAt,
-    updatedAt: spot.updatedAt,
-    avgRating: null, // For spots, we don't have an average rating
-    previewImage: spot.SpotImages.length > 0 ? spot.SpotImages[0].url : null
-  }));
+    const formattedSpots = spots.map(spot => {
+      const formattedSpot = {
+        id: spot.id,
+        ownerId: spot.ownerId,
+        address: spot.address,
+        city: spot.city,
+        state: spot.state,
+        country: spot.country,
+        lat: spot.lat,
+        lng: spot.lng,
+        name: spot.name,
+        description: spot.description,
+        price: spot.price,
+        createdAt: spot.createdAt,
+        updatedAt: spot.updatedAt,
+        avgRating: null,  // For spots, we don't have an average rating
+        previewImage: spot.SpotImages.length > 0 ? spot.SpotImages[0].url : null,
+        reviews: spot.Reviews  // Include reviews for the spot
+      };
 
-  res.status(200).json({ Spots: formattedSpots });
+      return formattedSpot;
+    });
+
+    res.status(200).json({ Spots: formattedSpots });
+  } catch (error) {
+    console.error('Error fetching spots:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
+
 
 
 
