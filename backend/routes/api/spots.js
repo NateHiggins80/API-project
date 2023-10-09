@@ -7,8 +7,6 @@ const Sequelize = require('sequelize')
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
-const options = {};
-
 const router = express.Router();
 
 
@@ -79,7 +77,7 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
 });
 
 
-//Creat a Spot Review
+//Create a Spot Review
 router.post('/:spotId/reviews', requireAuth, async (req, res) => {
   const { review, stars } = req.body;
   const { spotId } = req.params;
@@ -168,65 +166,70 @@ router.get("/:spotId/reviews", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+
+
 //GET CURRENT
+
 router.get('/current', requireAuth, async (req, res) => {
   const { user } = req;
 
-  try {
-    const spots = await Spot.findAll({
-      where: {
-        ownerId: user.id
-      },
-      include: [
-        {
-          model: SpotImage,
-          attributes: ['url'],
-          as: 'SpotImages'
-        },
-        {
-          model: Review,
-          attributes: ['id', 'review', 'stars'],
-          include: [
-            {
-              model: User,
-              attributes: ['id', 'firstName', 'lastName']
-            }
-          ]
-        }
-      ]
-    });
+  const spots = await Spot.findAll({
+    where: {
+      ownerId: user.id
+    },
+    attributes: [
+      'id',
+      'ownerId',
+      'address',
+      'city',
+      'state',
+      'country',
+      'lat',
+      'lng',
+      'name',
+      'description',
+      'price',
+      'createdAt',
+      'updatedAt',
+    ],
+    include: [
+      // Include any other related models you need for this response
+      // Example:
+      // {
+      //   model: PreviewImage,
+      //   attributes: ['url'],
+      // },
+    ],
+  });
 
-    const formattedSpots = spots.map(spot => {
-      const formattedSpot = {
-        id: spot.id,
-        ownerId: spot.ownerId,
-        address: spot.address,
-        city: spot.city,
-        state: spot.state,
-        country: spot.country,
-        lat: spot.lat,
-        lng: spot.lng,
-        name: spot.name,
-        description: spot.description,
-        price: spot.price,
-        createdAt: spot.createdAt,
-        updatedAt: spot.updatedAt,
-        avgRating: null,  // For spots, we don't have an average rating
-        previewImage: spot.SpotImages.length > 0 ? spot.SpotImages[0].url : null,
-        reviews: spot.Reviews  // Include reviews for the spot
-      };
+  const formattedSpots = spots.map(spot => ({
+    id: spot.id,
+    ownerId: spot.ownerId,
+    address: spot.address,
+    city: spot.city,
+    state: spot.state,
+    country: spot.country,
+    lat: spot.lat,
+    lng: spot.lng,
+    name: spot.name,
+    description: spot.description,
+    price: spot.price,
+    createdAt: spot.createdAt,
+    updatedAt: spot.updatedAt,
+    avgRating: 4.5, // Replace with actual average rating
+    previewImage: 'image url', // Replace with actual preview image URL
+  }));
 
-      return formattedSpot;
-    });
-
-    res.status(200).json({ Spots: formattedSpots });
-  } catch (error) {
-    console.error('Error fetching spots:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
+  res.status(200).json({ Spots: formattedSpots });
 });
 
+module.exports = router;
 
+
+
+
+//Get Details of a spot by ID
 router.get('/:spotId', async(req, res) => {
     const { spotId } = req.params
 
