@@ -29,17 +29,17 @@ module.exports = {
       preview: true
     },
     {
-      spotId: 11,
+      spotId: 1,
       url: 'https://media.tenor.com/n3jzz4VgdY4AAAAC/apple-emotion-terrified.gif',
       preview: true
     },
     {
-      spotId: 12,
+      spotId: 2,
       url: 'https://preview.redd.it/w9efjf45swb21.jpg?width=960&crop=smart&auto=webp&s=701089f3bbad4168b1b12325b3844e9e3dbca35a',
       preview: true
     },
     {
-      spotId: 13,
+      spotId: 3,
       url: 'https://img.freepik.com/premium-photo/city-made-cheese-generative-ai_384720-4723.jpg?w=1060',
       preview: true
     },
@@ -70,12 +70,12 @@ module.exports = {
     },
     {
       spotId: 9,
-      url: 'https://ogden_images.s3.amazonaws.com/www.motherearthnews.com/images/1991/10/22142841/128-040-01i5.jpg',
+      url: 'https://bloximages.newyork1.vip.townnews.com/santafenewmexican.com/content/tncms/assets/v3/editorial/3/d2/3d2d7019-a1d1-5e06-90ac-69ae8ebabad3/57a3ace7934de.image.jpg?resize=667%2C500',
       preview: true
     },
     {
       spotId: 10,
-      url: 'https://www.housedigest.com/img/gallery/take-a-tour-of-this-iconic-new-mexico-earthship-home-thats-for-sale/intro-1649870676.webp',
+      url: 'https://cdn.greatlifepublishing.net/wp-content/uploads/sites/2/2023/01/23111025/1200x628-template-4-2023-01-23T111011.281.png',
       preview: true
     }
 
