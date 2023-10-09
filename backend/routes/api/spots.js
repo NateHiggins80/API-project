@@ -414,22 +414,22 @@ router.get('/:spotId', async (req, res) => {
     const spotId = req.params.spotId;
     const userId = req.user.id;  // Assuming user id is in req.user.id
 
-    try {
-      // Check if the spot exists and belongs to the current user
-      const spot = await Spot.findOne({
-        where: {
-          id: spotId,
-          ownerId: userId
-        }
-      });
-
-      if (!spot) {
-        return res.status(404).json({
-          message: "Spot couldn't be found"
-        });
+    // Check if the spot exists and belongs to the current user
+    const spot = await Spot.findOne({
+      where: {
+        id: spotId,
+        ownerId: userId
       }
+    });
 
-      // Create the spot image
+    if (!spot) {
+      return res.status(404).json({
+        message: "Spot couldn't be found"
+      });
+    }
+
+    // Create the spot image
+    try {
       const spotImage = await SpotImage.create({
         url,
         preview,
@@ -449,6 +449,7 @@ router.get('/:spotId', async (req, res) => {
       });
     }
   });
+
 
 
 // CREATE SPOT
