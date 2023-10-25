@@ -24,9 +24,9 @@ router.get('/current', requireAuth, async(req, res) => {
   {
   model: Spot,
   attributes: ['id', 'ownerId', 'address', 'city', 'state', 'country', 'lat', 'lng', 'name', 'price'],
-  // include: {
-  // model: SpotImage
-  // }
+  include: {
+  model: SpotImage
+  }
   },
   {
   model: ReviewImage,
@@ -42,13 +42,7 @@ router.get('/current', requireAuth, async(req, res) => {
 
   // add reviewImage:
   reviewsJson.forEach(review => {
-  for(let key in review.Spot) {
-  review.Spot.SpotImages.forEach(spot => {
-  if(spot.preview) {
-  review.Spot.previewImage = spot.url
-  }
-  })
-  }
+  
   delete review.Spot.SpotImages
   })
 
