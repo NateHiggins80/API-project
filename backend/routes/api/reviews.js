@@ -41,10 +41,26 @@ router.get('/current', requireAuth, async(req, res) => {
   });
 
   // add reviewImage:
+  // reviewsJson.forEach(review => {
+
+  // review.Spot.SpotImages.forEach(spot => {
+  // if(spot.preview) {
+  // review.Spot.previewImage = spot.url
+  // }
+  // })
+  // })
+  // delete review.Spot.SpotImages
+  // })
+
   reviewsJson.forEach(review => {
-  
-  delete review.Spot.SpotImages
-  })
+    review.Spot.SpotImages.forEach(spot => {
+      if (spot.preview) {
+        review.Spot.previewImage = spot.url;
+      }
+    });
+    // Remove the 'SpotImages' property as it's no longer needed
+    delete review.Spot.SpotImages;
+  });
 
   if(reviewsJson.length === 0) {
   res.status(404)
