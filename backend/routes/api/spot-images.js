@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../utils/auth.js');
+const { requireAuth } = require('../../utils/auth.js');
 const { SpotImage, Spot } = require('../../db/models');
 
 // Delete a Spot Image
