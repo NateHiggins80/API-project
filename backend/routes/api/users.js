@@ -51,6 +51,21 @@ router.post(
         res.status(400).json(errors)
       }
 
+      const existingUser = await User.findOne({
+        where: {
+          username,
+        },
+      });
+
+      if (existingUser) {
+        return res.status(500).json({
+          message: 'User already exists',
+          errors: {
+            username: 'User with that username already exists',
+          },
+        });
+      }
+
       const user = await User.create({ email, username, firstName, lastName, hashedPassword });
 
       const safeUser = {

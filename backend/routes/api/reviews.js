@@ -58,7 +58,7 @@ router.get('/current', requireAuth, async(req, res) => {
         review.Spot.previewImage = spot.url;
       }
     });
-    // Remove the 'SpotImages' property as it's no longer needed
+    
     delete review.Spot.SpotImages;
   });
 
