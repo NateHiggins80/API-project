@@ -12,8 +12,18 @@ const router = express.Router();
 // Create a Booking from a Spot based on the Spot's id
 router.post('/:spotId/bookings', requireAuth, async (req, res) => {
   const { startDate, endDate } = req.body;
-  const spotId = req.params.spotId;
+  const spotId = parseInt(req.params.spotId, 10); // Parse spotId as an integer with base 10
   const userId = req.user.id;
+
+  // Check if the parsed spotId is a valid integer
+  if (isNaN(spotId)) {
+    return res.status(400).json({
+      message: 'Bad Request',
+      errors: {
+        spotId: 'Invalid spotId format',
+      },
+    });
+  }
 
   // Parse the date strings into Date objects
   const parsedStartDate = new Date(startDate);
@@ -80,7 +90,6 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
 
   return res.status(200).json(newBooking);
 });
-
 
 
 
