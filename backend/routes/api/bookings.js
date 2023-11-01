@@ -13,15 +13,47 @@ router.get('/current', requireAuth, async (req, res) => {
 
     const bookings = await Booking.findAll({
       where: { userId: user.id },
-      include: [{ model: Spot, attributes: ['id', 'ownerId'] }],
+      include: [
+        {
+          model: Spot,
+          attributes: [
+            'id',
+            'ownerId',
+            'address',
+            'city',
+            'state',
+            'country',
+            'lat',
+            'lng',
+            'name',
+            'price',
+            'previewImage',
+          ],
+        },
+      ],
+      attributes: [
+        'id',
+        'startDate',
+        'endDate',
+        'createdAt',
+        'updatedAt',
+      ],
     });
 
-    res.status(200).json({ Bookings: bookings });
+    if (bookings.length === 0) {
+      // If no bookings are found, return a 404 status code
+      res.status(404).json({ message: 'No bookings found for the current user' });
+    } else {
+      // If bookings are found, return a 200 status code with the bookings and associated spot information
+      res.status(200).json({ Bookings: bookings });
+    }
   } catch (error) {
     console.error('Error getting user bookings:', error);
+    // Handle internal server error
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 //Get all bookings by Spot Id
 
