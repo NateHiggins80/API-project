@@ -1,10 +1,11 @@
 const express = require('express');
 const { requireAuth } = require('../../utils/auth');
-const { Booking, Spot, User } = require('../../db/models');
+const { Booking, Spot, User, SpotImage } = require('../../db/models');
 const { Op } = require('sequelize');
 
 
 const router = express.Router();
+
 
 // GET all bookings for the current user
 router.get('/current', requireAuth, async (req, res) => {
@@ -27,29 +28,47 @@ router.get('/current', requireAuth, async (req, res) => {
             'lng',
             'name',
             'price',
-            'previewImage',
+          ],
+          include: [
+            {
+              model: Review,
+              attributes: [
+                'id',
+                'userId',
+                'spotId',
+                'review',
+                'stars',
+                'createdAt',
+                'updatedAt',
+              ],
+              include: [
+                {
+                  model: User,
+                  attributes: ['id', 'firstName', 'lastName'],
+                },
+                {
+                  model: SpotImage,
+                  attributes: ['id', 'url as previewImage'],
+                },
+              ],
+            },
           ],
         },
+        {
+          model: BookingImage,
+          attributes: ['id', 'url'],
+        },
       ],
-      attributes: [
-        'id',
-        'startDate',
-        'endDate',
-        'createdAt',
-        'updatedAt',
-      ],
+      attributes: ['id', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
     });
 
     if (bookings.length === 0) {
-      // If no bookings are found, return a 404 status code
       res.status(404).json({ message: 'No bookings found for the current user' });
     } else {
-      // If bookings are found, return a 200 status code with the bookings and associated spot information
       res.status(200).json({ Bookings: bookings });
     }
   } catch (error) {
     console.error('Error getting user bookings:', error);
-    // Handle internal server error
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
