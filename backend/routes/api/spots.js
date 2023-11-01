@@ -574,62 +574,88 @@ router.post('/', requireAuth, async (req, res) => {
       });
   });
 
-  router.put('/:spotId', requireAuth, async (req, res) => {
-    const { spotId } = req.params;
-    const updatedSpotData = req.body;
+  //Edit A Spot
+  // Route to edit a spot by ID
+router.put('/spots/:spotId', requireAuth, async (req, res) => {
+  const { spotId } = req.params;
+  const updatedSpotData = req.body;
 
-    // Validate the data
-    const errors = {};
 
-    const requiredFields = ['address', 'city', 'state', 'country'];
-    requiredFields.forEach(field => {
-        if (!updatedSpotData[field]) {
-            errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-        }
-    });
+  const spot = await Spot.findByPk(spotId);
 
-    if (!updatedSpotData.name || updatedSpotData.name.length > 50) {
-        errors.name = 'Name must be less than 50 characters';
+  if (!spot) {
+      return res.status(404).json({
+          message: 'Spot not found'
+      });
+  }
+  if (!user.id) {
+    res.status(403);
+    return res.json({message: "Authentication Required"})
+  }
+  // confirming that user owns the spot:
+  if (user.id !== spot.ownerId) {
+    res.status(403);
+    return res.json({message: "Only owner can add an image"})
     }
+  // Validate the data
+  const errors = {};
 
-    if (req.body.lat && (isNaN(req.body.lat) || Math.abs(req.body.lat) > 90)) {
-        errors.lat = 'Latitude is not valid';
-    }
+  const requiredFields = ['address', 'city', 'state', 'country'];
+  requiredFields.forEach(field => {
+      if (!updatedSpotData[field]) {
+          errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+      }
+  });
 
-    if (req.body.lng && (isNaN(req.body.lng) || Math.abs(req.body.lng) > 180)) {
-        errors.lng = 'Longitude is not valid';
-    }
+  if (!updatedSpotData.name || updatedSpotData.name.length > 50) {
+      errors.name = 'Name must be less than 50 characters';
+  }
 
-    if (Object.keys(errors).length > 0) {
-        return res.status(400).json({
-            message: 'Bad Request',
-            errors
-        });
-    }
+  if (updatedSpotData.price !== undefined && (isNaN(updatedSpotData.price) || updatedSpotData.price < 0)) {
+      errors.price = 'Price must be a non-negative number';
+  }
 
-    try {
-        const spot = await Spot.findByPk(spotId);
+  if (updatedSpotData.lat && (isNaN(updatedSpotData.lat) || Math.abs(updatedSpotData.lat) > 90)) {
+      errors.lat = 'Latitude is not valid';
+  }
 
-        if (!spot) {
-            return res.status(404).json({
-                message: 'Spot not found'
-            });
-        }
+  if (updatedSpotData.lng && (isNaN(updatedSpotData.lng) || Math.abs(updatedSpotData.lng) > 180)) {
+      errors.lng = 'Longitude is not valid';
+  }
 
-        // Update the spot with the new data
-        await spot.update(updatedSpotData);
+  if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+          message: 'Bad Request',
+          errors
+      });
+  }
 
-        res.status(200).json(spot);
-    } catch (error) {
-        res.status(500).json({
-            message: 'Internal Server Error'
-        });
-    }
+  try {
+
+
+      // Update the spot with the new data
+      await spot.update(updatedSpotData);
+
+      res.status(200).json(spot);
+  } catch (error) {
+      res.status(500).json({
+          message: 'Internal Server Error'
+      });
+  }
 });
 
+// // confirming that user owns the spot:
+// if (user.id !== spot.ownerId) {
+//   res.status(403);
+//   return res.json({message: "Only owner can add an image"})
+//   }
 
+
+//DELETE A SPOT
 router.delete('/spots/:spotId/images/:imageId', requireAuth, async (req, res) => {
   const { spotId, imageId } = req.params;
+
+
 
   const spot = await Spot.findByPk(spotId);
   if (!spot) {
