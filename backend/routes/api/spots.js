@@ -576,7 +576,7 @@ router.post('/', requireAuth, async (req, res) => {
 
   //Edit A Spot
   // Route to edit a spot by ID
-router.put('/spots/:spotId', requireAuth, async (req, res) => {
+router.put('/:spotId', requireAuth, async (req, res) => {
   const { spotId } = req.params;
   const updatedSpotData = req.body;
 
@@ -588,15 +588,15 @@ router.put('/spots/:spotId', requireAuth, async (req, res) => {
           message: 'Spot not found'
       });
   }
-  if (!user.id) {
+  if (req.user.id !== spot.ownerId) {
     res.status(403);
     return res.json({message: "Authentication Required"})
   }
-  // confirming that user owns the spot:
-  if (user.id !== spot.ownerId) {
-    res.status(403);
-    return res.json({message: "Only owner can add an image"})
-    }
+  // // confirming that user owns the spot:
+  // if (user.id !== spot.ownerId) {
+  //   res.status(403);
+  //   return res.json({message: "Only owner can add an image"})
+  //   }
   // Validate the data
   const errors = {};
 
