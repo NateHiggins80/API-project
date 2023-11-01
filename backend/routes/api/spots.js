@@ -9,9 +9,7 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-
-
-//Create a Booking from a Spot based on the Spot's id
+// Create a Booking from a Spot based on the Spot's id
 router.post('/:spotId/bookings', requireAuth, async (req, res) => {
   const { startDate, endDate } = req.body;
   const spotId = req.params.spotId;
@@ -30,51 +28,61 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
       },
     });
   }
-    // Check if the spot exists
-    const spot = await Spot.findByPk(spotId);
-    if (!spot) {
-      return res.status(404).json({ message: 'Spot couldn\'t be found' });
-    }
 
-    // Check for conflicts in booking request
-    const conflictBooking = await Booking.findOne({
-      where: {
-        spotId,
-        [Op.or]: [
-          {
-            startDate: {
-              [Op.between]: [parsedStartDate, parsedEndDate],
-            },
+  // Check if the spot exists
+  const spot = await Spot.findByPk(spotId);
+  if (!spot) {
+    return res.status(404).json({ message: 'Spot couldn\'t be found' });
+  }
+
+  // Check for conflicts in booking request
+  const conflictBooking = await Booking.findOne({
+    where: {
+      spotId,
+      [Op.or]: [
+        {
+          startDate: {
+            [Op.between]: [parsedStartDate, parsedEndDate],
           },
-          {
-            endDate: {
-              [Op.between]: [parsedStartDate, parsedEndDate],
-            },
+        },
+        {
+          endDate: {
+            [Op.between]: [parsedStartDate, parsedEndDate],
           },
-        ],
+        },
+        {
+          [Op.and]: [
+            { startDate: { [Op.lte]: parsedStartDate } },
+            { endDate: { [Op.gte]: parsedEndDate } },
+          ],
+        },
+      ],
+    },
+  });
+
+  if (conflictBooking) {
+    return res.status(403).json({
+      message: 'Sorry, this spot is already booked for the specified dates',
+      errors: {
+        startDate: 'Start date conflicts with an existing booking',
+        endDate: 'End date conflicts with an existing booking',
       },
     });
+  }
 
-    if (conflictBooking) {
-      return res.status(403).json({
-        message: 'Sorry, this spot is already booked for the specified dates',
-        errors: {
-          startDate: 'Start date conflicts with an existing booking',
-          endDate: 'End date conflicts with an existing booking',
-        },
-      });
-    }
+  // All conflicts handled, create the booking
+  const newBooking = await Booking.create({
+    userId,
+    spotId,
+    startDate: parsedStartDate,
+    endDate: parsedEndDate,
+  });
 
-    // All conflicts handled create the booking
-    const newBooking = await Booking.create({
-      userId,
-      spotId,
-      startDate: parsedStartDate,
-      endDate: parsedEndDate,
-    });
-
-    return res.status(200).json(newBooking);
+  return res.status(200).json(newBooking);
 });
+
+
+
 
 
 //Create a Spot Review
