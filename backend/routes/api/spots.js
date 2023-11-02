@@ -669,44 +669,50 @@ router.put('/:spotId', requireAuth, async (req, res) => {
 
 
 //DELETE A SPOT
-router.delete('/:spotId/', requireAuth, async (req, res) => {
-  const { spotId, imageId } = req.params;
+// router.delete('/:spotId/', requireAuth, async (req, res) => {
+//   const { spotId, imageId } = req.params;
 
 
 
-  const spot = await Spot.findByPk(spotId);
-  if (!spot) {
-    return res.status(404).json({ message: 'Spot not found' });
-  }
+//   const spot = await Spot.findByPk(spotId);
+//   if (!spot) {
+//     return res.status(404).json({ message: 'Spot not found' });
+//   }
 
-  if (spot.ownerId !== req.user.id) {
-    return res.status(403).json({ message: 'You are not authorized to delete this image' });
-  }
+//   if (spot.ownerId !== req.user.id) {
+//     return res.status(403).json({ message: 'You are not authorized to delete this image' });
+//   }
 
-  const deletedImage = await SpotImage.destroy({ where: { id: imageId } });
+//   const deletedImage = await SpotImage.destroy({ where: { id: imageId } });
 
-  if (!deletedImage) {
-    return res.status(404).json({ message: 'Image not found' });
-  }
+//   if (!deletedImage) {
+//     return res.status(404).json({ message: 'Image not found' });
+//   }
 
-  return res.status(200).json({ message: 'Image successfully deleted' });
-});
+//   return res.status(200).json({ message: 'Image successfully deleted' });
+// });
 
 router.delete('/:spotId', requireAuth, async (req, res) => {
-    const { spotId } = req.params;
+  try {
+    const { user } = req;
+    const spotDeleter = await Spot.findByPk(req.params.spotId);
+    const ownerId = spotToDelete.dataValues.ownerId;
 
-    try {
-        const spot = await Spot.findByPk(spotId);
-
-        await spot.destroy();
-
+    //authorization check
+    if (user.id === ownerId) {
+        await spotDeleter.destroy();
         res.status(200).json({
-            message: 'Successfully deleted'
-        })
-    }catch (error) {
-        res.status(404).json({ 'message': "Spot couldn't be found"})
+            "message": "Successfully deleted"
+        });
+    } else {
+        return res.status(403).json({
+            "message": "Forbidden"
+        });
     }
-})
+} catch (error) {
+    res.status(404).json({ "message": "Spot couldn't be found" });
+}
+});
 
 
 module.exports = router
