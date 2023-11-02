@@ -1,6 +1,6 @@
 const express = require('express');
 const { requireAuth } = require('../../utils/auth');
-const { Booking, Spot, User, SpotImage, Review } = require('../../db/models');
+const { Booking, Spot, User, SpotImage, Review, ReviewImage } = require('../../db/models');
 const { Op } = require('sequelize');
 
 
