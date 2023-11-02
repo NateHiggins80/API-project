@@ -76,36 +76,41 @@ router.get('/current', requireAuth, async(req, res) => {
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
   const { url } = req.body;
-  const userId = req.user.id;
+  const { user } = req.user.id;
 
   try {
     // Check if the review exists
-    const review = await Review.findOne({
-      where: {
-        id: reviewId,
-        userId: userId,
-      },
-    });
+    const review = await Review.findByPk(reviewId);
 
-    if (!review) {
-      return res.status(404).json({ message: "Review couldn't be found" });
-    }
+        if (user.id === review.userId) {
+            //aggregate count on review.images
+            const allReviewImages = await ReviewImage.count({
+                where: {
+                    reviewId
+                }
+            });
 
-    const imageCount = await ReviewImage.count({
-      where: { reviewId },
-    });
+            if (allReviewImages >= 10) {
+                return res.status(403).json({
+                    "message": "Maximum number of images for this resource was reached"
+                });
+            }
+            const newImage = await ReviewImage.create({
+                reviewId,
+                url
+            });
 
-    if (imageCount >= 10) {
-      return res.status(403).json({ message: "Maximum number of images for this resource was reached" });
-    }
+            const newImageObject = newImage.toJSON();
 
-    // Create the image
-    const createdImage = await ReviewImage.create({
-      reviewId,
-      url,
-    });
-
-    return res.status(200).json(createdImage);
+            res.json({
+                "id": newImageObject.id,
+                "url": newImageObject.url
+            });
+        } else {
+            res.status(403).json({
+                "message": "Forbidden"
+            });
+        }
   } catch (error) {
     console.error('Error adding image to review:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
