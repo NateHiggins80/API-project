@@ -7,75 +7,47 @@ const { Op } = require('sequelize');
 const router = express.Router();
 
 // GET all bookings for the current user
-router.get('/current', requireAuth, async (req, res) => {
-  const { user } = req;
 
-  const bookings = await Booking.findAll({
-    where: { userId: user.id },
-    include: [
-      {
-        model: Spot,
-        attributes: [
-          'id',
-          'ownerId',
-          'address',
-          'city',
-          'state',
-          'country',
-          'lat',
-          'lng',
-          'name',
-          'price',
-        ],
-        include: [
-          {
-            model: Review,
-            attributes: [
-              'id',
-              'userId',
-              'spotId',
-              'review',
-              'stars',
-              'createdAt',
-              'updatedAt',
-            ],
-            include: [
-              {
-                model: User,
-                attributes: ['id', 'firstName', 'lastName'],
-              },
-            ],
-          },
-        ],
+router.get("/current", requireAuth, async (req, res) => {
+  const { user } = req;
+  const allUserBookings = await Booking.findAll({
+      where: {
+          userId: user.id
       },
-    ],
-    attributes: ['id', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
+      attributes: ["id", "spotId", "userId", "startDate", "endDate", "createdAt", "updatedAt"],
+      include: [
+          {
+              model: Spot,
+              attributes: {
+                  exclude: ["description", "createdAt", "updatedAt"]
+              }
+          }
+      ]
   });
 
-  if (bookings.length === 0) {
-    res.status(404).json({ message: 'No bookings found for the current user' });
-    return;
+  const allImages = await SpotImage.findAll();
+  let allBookingsObject = allUserBookings.map((booking) => booking.toJSON());
+
+  for (let i = 0; i < allBookingsObject.length; i++) {
+      for (let j = 0; j < allImages.length; j++) {
+          if (allImages[j].spotId === allBookingsObject[i].spotId) {
+              if (allImages[j].preview === true) {
+                  allBookingsObject[i].Spot.previewImage = allImages[j].url;
+                  break;
+              } else {
+                  allBookingsObject[i].Spot.previewImage = "No preview available";
+              }
+          } else {
+              allBookingsObject[i].Spot.previewImage = "No preview available";
+          }
+      }
+      allBookingsObject[i].endDate = allBookingsObject[i].endDate;
+      allBookingsObject[i].startDate = allBookingsObject[i].startDate;
   }
 
-  // Iterate through bookings and query for SpotImage for each Spot
-  for (const booking of bookings) {
-    const spot = booking.Spot;
-
-    // Query for SpotImage with preview set to true
-    const spotImages = await SpotImage.findAll({
-      where: {
-        spotId: spot.id,
-        preview: true,
-      },
-      attributes: ['id', 'url as previewImage'],
-    });
-
-    // Attach the SpotImages to the Spot
-    spot.SpotImages = spotImages;
-  }
-
-  res.status(200).json({ Bookings: bookings });
+  res.json({ Bookings: allBookingsObject });
 });
+
 
 
 
