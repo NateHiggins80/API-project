@@ -54,10 +54,10 @@ router.get('/current', requireAuth, async (req, res) => {
             },
           ],
         },
-        {
-          model: BookingImage,
-          attributes: ['id', 'url'],
-        },
+        // {
+        //   model: BookingImage,
+        //   attributes: ['id', 'url'],
+        // },
       ],
       attributes: ['id', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
     });
