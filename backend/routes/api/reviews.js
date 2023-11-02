@@ -58,7 +58,7 @@ router.get('/current', requireAuth, async(req, res) => {
         review.Spot.previewImage = spot.url;
       }
     });
-    
+
     delete review.Spot.SpotImages;
   });
 
@@ -113,40 +113,55 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
 });
 
 router.put('/:reviewId', requireAuth, async (req, res) => {
-    const { reviewId } = req.params;
-    const { review, stars } = req.body;
-    const userId = req.user.id;
+  const { reviewId } = req.params;
+  const { review, stars } = req.body;
+  const userId = req.user.id;
 
-    try {
+  try {
+    const existingReview = await Review.findOne({
+      where: {
+        id: reviewId,
+        userId,
+      },
+    });
 
-      const existingReview = await Review.findOne({
-        where: {
-          id: reviewId,
-          userId,
-        },
-      });
-
-      if (!existingReview) {
-        return res.status(404).json({ message: "Review couldn't be found" });
-      }
-
-      // Update the review
-      await existingReview.update({
-        review,
-        stars,
-      });
-
-      // Fetch the updated review
-      const updatedReview = await Review.findOne({
-        where: { id: reviewId },
-      });
-
-      return res.status(200).json(updatedReview);
-    } catch (error) {
-      console.error('Error updating review:', error);
-      return res.status(500).json({ message: 'Internal Server Error' });
+    if (!existingReview) {
+      return res.status(404).json({ message: "Review couldn't be found" });
     }
-  });
+
+    const errors = {};
+
+    if (!review || typeof review !== 'string') {
+      errors.review = "Review text is required and must be a string";
+    }
+
+    if (isNaN(stars) || stars < 1 || stars > 5) {
+      errors.stars = "Stars must be an integer from 1 to 5";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        message: "Bad Request",
+        errors,
+      });
+    }
+
+    await existingReview.update({
+      review,
+      stars,
+    });
+
+    const updatedReview = await Review.findOne({
+      where: { id: reviewId },
+    });
+
+    return res.status(200).json(updatedReview);
+  } catch (error) {
+    console.error('Error updating review:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 
   router.delete('/:reviewId', requireAuth, (req, res) => {
     const { reviewId } = req.params;
