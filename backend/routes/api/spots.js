@@ -15,15 +15,15 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
   const spotId = parseInt(req.params.spotId, 10); // Parse spotId as an integer with base 10
   const userId = req.user.id;
 
-  // Check if the parsed spotId is a valid integer
-  if (isNaN(spotId)) {
-    return res.status(400).json({
-      message: 'Bad Request',
-      errors: {
-        spotId: 'Invalid spotId format',
-      },
-    });
-  }
+  // // Check if the parsed spotId is a valid integer
+  // if (isNaN(spotId)) {
+  //   return res.status(400).json({
+  //     message: 'Bad Request',
+  //     errors: {
+  //       spotId: 'Invalid spotId format',
+  //     },
+  //   });
+  // }
 
   // Parse the date strings into Date objects
   const parsedStartDate = new Date(startDate);
