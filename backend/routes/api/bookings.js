@@ -9,7 +9,7 @@ const router = express.Router();
 
 // GET all bookings for the current user
 router.get('/current', requireAuth, async (req, res) => {
-  try {
+  //try {
     const { user } = req;
 
     const bookings = await Booking.findAll({
@@ -67,10 +67,10 @@ router.get('/current', requireAuth, async (req, res) => {
     } else {
       res.status(200).json({ Bookings: bookings });
     }
-  } catch (error) {
-    console.error('Error getting user bookings:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
+  // } catch (error) {
+  //   console.error('Error getting user bookings:', error);
+  //   res.status(500).json({ message: 'Internal Server Error' });
+  // }
 });
 
 
