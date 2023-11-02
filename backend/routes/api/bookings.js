@@ -6,10 +6,9 @@ const { Op } = require('sequelize');
 
 const router = express.Router();
 
-
 // GET all bookings for the current user
 router.get('/current', requireAuth, async (req, res) => {
-  //try {
+  try {
     const { user } = req;
 
     const bookings = await Booking.findAll({
@@ -46,32 +45,40 @@ router.get('/current', requireAuth, async (req, res) => {
                   model: User,
                   attributes: ['id', 'firstName', 'lastName'],
                 },
-                {
-                  model: SpotImage,
-                  attributes: ['id', 'url as previewImage'],
-                },
               ],
             },
           ],
         },
-        // {
-        //   model: BookingImage,
-        //   attributes: ['id', 'url'],
-        // },
       ],
       attributes: ['id', 'startDate', 'endDate', 'createdAt', 'updatedAt'],
     });
 
     if (bookings.length === 0) {
       res.status(404).json({ message: 'No bookings found for the current user' });
-    } else {
-      res.status(200).json({ Bookings: bookings });
+      return;
     }
-  // } catch (error) {
-  //   console.error('Error getting user bookings:', error);
-  //   res.status(500).json({ message: 'Internal Server Error' });
-  // }
+
+    for (const booking of bookings) {
+      const spot = booking.Spot;
+
+      const spotImages = await SpotImage.findAll({
+        where: {
+          spotId: spot.id,
+          preview: true,
+        },
+        attributes: ['id', 'url as previewImage'],
+      });
+
+      spot.SpotImages = spotImages;
+    }
+
+    res.status(200).json({ Bookings: bookings });
+  } catch (error) {
+    console.error('Error getting user bookings:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
+
 
 
 //Get all bookings by Spot Id
