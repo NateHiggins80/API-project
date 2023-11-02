@@ -72,7 +72,7 @@ router.get('/current', requireAuth, async(req, res) => {
   })
 
 
-
+//CREATE REVIEW IMAGE
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
   const { url } = req.body;
@@ -112,6 +112,8 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
   }
 });
 
+
+//EDIT REVIEW
 router.put('/:reviewId', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
   const { review, stars } = req.body;
@@ -146,10 +148,15 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
       });
     }
 
-    await existingReview.update({
-      review,
-      stars,
-    });
+    try {
+      await existingReview.update({
+        review,
+        stars,
+      });
+    } catch (updateError) {
+      console.error('Error updating review:', updateError);
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
 
     const updatedReview = await Review.findOne({
       where: { id: reviewId },
@@ -163,6 +170,7 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
 });
 
 
+  //DELETE REVIEW
   router.delete('/:reviewId', requireAuth, (req, res) => {
     const { reviewId } = req.params;
     const userId = req.user.id;
