@@ -118,7 +118,7 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
   const { review, stars } = req.body;
   const userId = req.user.id;
-
+  console.log(reviewId);
   try {
     const existingReview = await Review.findOne({
       where: {
