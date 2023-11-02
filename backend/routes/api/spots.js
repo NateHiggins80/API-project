@@ -693,26 +693,33 @@ router.put('/:spotId', requireAuth, async (req, res) => {
 // });
 
 router.delete('/:spotId', requireAuth, async (req, res) => {
-  // try {
+  try {
     const { user } = req;
-    const spotDeleter = await Spot.findByPk(req.params.spotId);
+    const spotToDelete = await Spot.findByPk(req.params.spotId);
+
+    if (!spotToDelete) {
+      return res.status(404).json({ message: "Spot couldn't be found" });
+    }
+
     const ownerId = spotToDelete.dataValues.ownerId;
 
-    //authorization check
+    // Authorization check
     if (user.id === ownerId) {
-        await spotDeleter.destroy();
-        res.status(200).json({
-            "message": "Successfully deleted"
-        });
+      await spotToDelete.destroy();
+      res.status(200).json({
+        message: "Successfully deleted",
+      });
     } else {
-        return res.status(403).json({
-            "message": "Forbidden"
-        });
+      return res.status(403).json({
+        message: "Forbidden",
+      });
     }
-// } catch (error) {
-//     res.status(404).json({ "message": "Spot couldn't be found" });
-// }
+  } catch (error) {
+    console.error('Error deleting spot:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
 });
+
 
 
 module.exports = router
