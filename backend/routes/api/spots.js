@@ -669,7 +669,7 @@ router.put('/:spotId', requireAuth, async (req, res) => {
 
 
 //DELETE A SPOT
-router.delete('/:spotId/images/:imageId', requireAuth, async (req, res) => {
+router.delete('/:spotId/', requireAuth, async (req, res) => {
   const { spotId, imageId } = req.params;
 
 
