@@ -46,12 +46,6 @@ router.get('/current', requireAuth, async (req, res) => {
               },
             ],
           },
-          {
-            model: SpotImage,
-            attributes: ['id', 'url as previewImage'],
-            where: { preview: true },
-            required: false,
-          },
         ],
       },
     ],
@@ -60,10 +54,29 @@ router.get('/current', requireAuth, async (req, res) => {
 
   if (bookings.length === 0) {
     res.status(404).json({ message: 'No bookings found for the current user' });
-  } else {
-    res.status(200).json({ Bookings: bookings });
+    return;
   }
+
+  // Iterate through bookings and query for SpotImage for each Spot
+  for (const booking of bookings) {
+    const spot = booking.Spot;
+
+    // Query for SpotImage with preview set to true
+    const spotImages = await SpotImage.findAll({
+      where: {
+        spotId: spot.id,
+        preview: true,
+      },
+      attributes: ['id', 'url as previewImage'],
+    });
+
+    // Attach the SpotImages to the Spot
+    spot.SpotImages = spotImages;
+  }
+
+  res.status(200).json({ Bookings: bookings });
 });
+
 
 
 //Get all bookings by Spot Id
