@@ -74,11 +74,12 @@ router.get('/current', requireAuth, async(req, res) => {
 
 //CREATE REVIEW IMAGE
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
+  try {
   const { reviewId } = req.params;
   const { url } = req.body;
   const user = req.user;
 
-  try {
+
     // Check if the review exists
     const review = await Review.findByPk(reviewId);
     console.log(review);
