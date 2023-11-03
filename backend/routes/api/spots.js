@@ -149,7 +149,7 @@ router.get("/:spotId/reviews", async (req, res) => {
   try {
     const { spotId } = req.params;
 
-    // Query the database to retrieve reviews for the specified spot
+    
     const reviews = await Review.findAll({
       where: {
         spotId: spotId
@@ -168,7 +168,7 @@ router.get("/:spotId/reviews", async (req, res) => {
 
     if (reviews.length === 0) {
       return res.status(404).json({
-        message: "Spot couldn't be found"
+        message: "No Reviews Currently For This Spot"
       });
     }
 
@@ -587,7 +587,7 @@ router.get('/:spotId', async (req, res) => {
 
       const currentSpot = await Spot.findByPk(req.params.spotId);
 
-      
+
       if (currentSpot.ownerId === user.id) {
         return res.status(403).json({ message: "Owner Cannot Book Their Own Spot" });
       }
