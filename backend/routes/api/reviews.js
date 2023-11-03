@@ -81,7 +81,7 @@ router.post('/:reviewId/images', requireAuth, async (req, res) => {
   try {
     // Check if the review exists
     const review = await Review.findByPk(reviewId);
-console.log(userId);
+    console.log('userId:', user.id);
         if (user.id === review.userId) {
             //aggregate count on review.images
             const allReviewImages = await ReviewImage.count({
