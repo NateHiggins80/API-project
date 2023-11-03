@@ -415,6 +415,7 @@ router.get("/", async (req, res) => {
     });
 });
 
+//Create spot image
   router.post('/:spotId/images', requireAuth, async(req, res) => {
     const {user} = req;
     const {url, preview} = req.body;
@@ -510,9 +511,8 @@ router.get("/", async (req, res) => {
 
       const currentSpot = await Spot.findByPk(req.params.spotId);
 
-
+      console.log('WHY IS THIS NOT WORKING');
       if (currentSpot.ownerId === user.id) {
-        console.log('WHY IS THIS NOT WORKIG');
         return res.status(403).json({ message: "Owner Cannot Book Their Own Spot" });
       }
 
