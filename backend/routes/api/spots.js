@@ -134,54 +134,84 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
 });
 
 //GET CURRENT
-
-router.get('/current', requireAuth, async (req, res) => {
+router.get("/current", requireAuth, async (req, res) => {
   const { user } = req;
+  const ownerId = user.id;
 
-  const spots = await Spot.findAll({
+  const yourSpots = await Spot.findAll({
     where: {
-      ownerId: user.id
+      ownerId,
     },
-    attributes: [
-      'id',
-      'ownerId',
-      'address',
-      'city',
-      'state',
-      'country',
-      'lat',
-      'lng',
-      'name',
-      'description',
-      'price',
-      'createdAt',
-      'updatedAt',
-    ],
     include: [
-
+      {
+        model: Review,
+        attributes: [["stars", "avgRating"]],
+      },
+      {
+        model: SpotImage,
+        attributes: [["url", "previewImage"]],
+      },
     ],
   });
 
-  const formattedSpots = spots.map(spot => ({
-    id: spot.id,
-    ownerId: spot.ownerId,
-    address: spot.address,
-    city: spot.city,
-    state: spot.state,
-    country: spot.country,
-    lat: spot.lat,
-    lng: spot.lng,
-    name: spot.name,
-    description: spot.description,
-    price: spot.price,
-    createdAt: spot.createdAt,
-    updatedAt: spot.updatedAt,
-    avgRating: 4.5,
-    previewImage: 'image url',
-  }));
+  const result = [];
 
-  res.status(200).json({ Spots: formattedSpots });
+  yourSpots.forEach(async (spotObj) => {
+    const jsonSpotObject = spotObj.toJSON();
+
+    const spotImages = jsonSpotObject.SpotImages;
+    let spotPreviewImage = null;
+
+    if (spotImages && spotImages.length > 0) {
+      spotPreviewImage = spotImages[0].previewImage;
+    }
+
+    let sumOfRatings = 0;
+
+
+    jsonSpotObject.Reviews.forEach((review) => {
+      sumOfRatings += review.avgRating;
+    });
+
+
+    const reviewsCount = jsonSpotObject.Reviews.length;
+
+    
+    jsonSpotObject.avgRating = reviewsCount > 0 ? sumOfRatings / reviewsCount : null;
+
+    let completeSpotObject = {
+      id: spotObj.id,
+      ownerId: spotObj.ownerId,
+      address: spotObj.address,
+      city: spotObj.city,
+      state: spotObj.state,
+      country: spotObj.country,
+      lat: Number(spotObj.lat),
+      lng: Number(spotObj.lng),
+      name: spotObj.name,
+      description: spotObj.description,
+      price: Number(spotObj.price),
+      createdAt: spotObj.createdAt,
+      updatedAt: spotObj.updatedAt,
+      avgRating: jsonSpotObject.avgRating,
+      previewImage: spotPreviewImage,
+    };
+
+    result.push(completeSpotObject);
+  });
+
+  if (result[0]) {
+    res.json({
+      Spots: result,
+    });
+  } else {
+    res.status(404).json({
+      message: "No Spots to show",
+    });
+  }
 });
+
+
 
 
 //Get Details of a spot by ID
