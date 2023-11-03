@@ -533,7 +533,7 @@ router.get('/:spotId', async (req, res) => {
     })
 
 
-    
+
     //Create a Booking from a Spot based on the Spot's id
     router.post("/:spotId/bookings", requireAuth, async (req, res) => {
       const numSpots = await Spot.count();
@@ -587,7 +587,7 @@ router.get('/:spotId', async (req, res) => {
 
       const currentSpot = await Spot.findByPk(req.params.spotId);
 
-      // Additional check to prevent the Spot owner from booking their own spot
+      
       if (currentSpot.ownerId === user.id) {
         return res.status(403).json({ message: "Owner Cannot Book Their Own Spot" });
       }
