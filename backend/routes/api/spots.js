@@ -176,7 +176,7 @@ router.get("/current", requireAuth, async (req, res) => {
 
     const reviewsCount = jsonSpotObject.Reviews.length;
 
-    
+
     jsonSpotObject.avgRating = reviewsCount > 0 ? sumOfRatings / reviewsCount : null;
 
     let completeSpotObject = {
@@ -512,6 +512,7 @@ router.get("/", async (req, res) => {
 
 
       if (currentSpot.ownerId === user.id) {
+        console.log('WHY IS THIS NOT WORKIG');
         return res.status(403).json({ message: "Owner Cannot Book Their Own Spot" });
       }
 
