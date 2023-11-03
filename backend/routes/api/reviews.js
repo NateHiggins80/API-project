@@ -76,7 +76,7 @@ router.get('/current', requireAuth, async(req, res) => {
 router.post('/:reviewId/images', requireAuth, async (req, res) => {
   const { reviewId } = req.params;
   const { url } = req.body;
-  const { user } = req;
+  const { user } = req.user;
 
   try {
     // Check if the review exists
