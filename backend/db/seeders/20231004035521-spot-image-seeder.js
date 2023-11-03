@@ -34,12 +34,12 @@ module.exports = {
       preview: true
     },
     {
-      spotId: 2,
+      spotId: 13,
       url: 'https://preview.redd.it/w9efjf45swb21.jpg?width=960&crop=smart&auto=webp&s=701089f3bbad4168b1b12325b3844e9e3dbca35a',
       preview: true
     },
     {
-      spotId: 3,
+      spotId: 12,
       url: 'https://img.freepik.com/premium-photo/city-made-cheese-generative-ai_384720-4723.jpg?w=1060',
       preview: true
     },
