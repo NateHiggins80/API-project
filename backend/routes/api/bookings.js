@@ -61,7 +61,7 @@ router.get("/current", requireAuth, async (req, res) => {
     }
     if(updatedBooking.userId !== userId){
         res.status(403);
-        return res.json({message: 'Forbidden'})
+        return res.json({message: 'Not Authorized'})
     }
     const startTime = new Date(startDate).getTime();
     const endTime =  new Date(endDate).getTime();

@@ -162,7 +162,7 @@ router.get("/:spotId/reviews", async (req, res) => {
 
     if (reviews.length === 0) {
       return res.status(404).json({
-        message: "No Reviews Currently For This Spot"
+        message: "Spot Couldn't Be Found"
       });
     }
 

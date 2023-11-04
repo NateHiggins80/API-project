@@ -27,7 +27,7 @@ router.delete('/:imageId', requireAuth, async (req, res) => {
           });
       } else {
           return res.status(403).json({
-              "message": "Forbidden"
+              "message": "Not Authorized"
           });
       }
       res.json({

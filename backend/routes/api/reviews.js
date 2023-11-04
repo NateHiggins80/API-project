@@ -186,7 +186,7 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
       return res.status(200).json(existingReview);
     } else {
       return res.status(403).json({
-        message: "Forbidden",
+        message: "Not Authorized",
       });
     }
   } catch (error) {
