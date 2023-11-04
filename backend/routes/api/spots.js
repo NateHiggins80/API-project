@@ -342,157 +342,157 @@ router.get('/:spotId', async(req, res) => {
 });
 
 // Get all spots with query filters
-router.get("/", async (req, res) => {
-    //pagination with the query filters
-    const { page = 1, size = 20, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+// router.get("/", async (req, res) => {
+//     //pagination with the query filters
+//     const { page = 1, size = 20, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
 
-    const paginationErrors = {};
+//     const paginationErrors = {};
 
-    if (isNaN(+size) + size < 1 + size > 20) {
-        paginationErrors.size = "Page must be greater than or equal to 1";
-    }
+//     if (isNaN(+size) + size < 1 + size > 20) {
+//         paginationErrors.size = "Page must be greater than or equal to 1";
+//     }
 
-    if (isNaN(+page) + page < 1 + page > 10) {
-        paginationErrors.page = "Page must be greater than or equal to 1";
-    }
+//     if (isNaN(+page) + page < 1 + page > 10) {
+//         paginationErrors.page = "Page must be greater than or equal to 1";
+//     }
 
-    if (maxLat && isNaN(+maxLat)) {
-        paginationErrors.maxLat = "Maximum latitude is invalid";
-    }
+//     if (maxLat && isNaN(+maxLat)) {
+//         paginationErrors.maxLat = "Maximum latitude is invalid";
+//     }
 
-    if (minLat && isNaN(+minLat)) {
-        paginationErrors.minLat = "Minimum latitude is invalid";
-    }
+//     if (minLat && isNaN(+minLat)) {
+//         paginationErrors.minLat = "Minimum latitude is invalid";
+//     }
 
-    if (maxLng && isNaN(+maxLng)) {
-        paginationErrors.maxLng = "Maximum longitude is invalid";
-    }
+//     if (maxLng && isNaN(+maxLng)) {
+//         paginationErrors.maxLng = "Maximum longitude is invalid";
+//     }
 
-    if (minLng && isNaN(+minLng)) {
-        paginationErrors.minLng = "Minimum longitude is invalid";
-    }
+//     if (minLng && isNaN(+minLng)) {
+//         paginationErrors.minLng = "Minimum longitude is invalid";
+//     }
 
-    if (maxPrice && isNaN(+maxPrice) + maxPrice < 0) {
-        paginationErrors.maxPrice = "Maximum price must be greater than or equal to 0";
-    }
+//     if (maxPrice && isNaN(+maxPrice) + maxPrice < 0) {
+//         paginationErrors.maxPrice = "Maximum price must be greater than or equal to 0";
+//     }
 
-    if (minPrice && isNaN(+minPrice) + minPrice < 0) {
-        paginationErrors.minPrice = "Minimum price must be greater than or equal to 0";
-    }
+//     if (minPrice && isNaN(+minPrice) + minPrice < 0) {
+//         paginationErrors.minPrice = "Minimum price must be greater than or equal to 0";
+//     }
 
-    if (
-        paginationErrors.page ||
-        paginationErrors.size ||
-        paginationErrors.minLat ||
-        paginationErrors.maxLat ||
-        paginationErrors.minLng ||
-        paginationErrors.maxLng ||
-        paginationErrors.minPrice ||
-        paginationErrors.maxPrice
-    ) {
-        res.status(400).json({
-            "message": "Bad Request",
-            "errors": paginationErrors
-        });
-    }
+//     if (
+//         paginationErrors.page ||
+//         paginationErrors.size ||
+//         paginationErrors.minLat ||
+//         paginationErrors.maxLat ||
+//         paginationErrors.minLng ||
+//         paginationErrors.maxLng ||
+//         paginationErrors.minPrice ||
+//         paginationErrors.maxPrice
+//     ) {
+//         res.status(400).json({
+//             "message": "Bad Request",
+//             "errors": paginationErrors
+//         });
+//     }
 
-    const where = {};
-    const pagination = {};
+//     const where = {};
+//     const pagination = {};
 
-    if (minLat && maxLat) {
-        where.lat = { [Op.between]: [minLat, maxLat] };
-    } else if (minLat) {
-        where.lat = { [Op.gte]: minLat };
-    } else if (maxLat) {
-        where.lat = { [Op.lte]: maxLat };
-    }
+//     if (minLat && maxLat) {
+//         where.lat = { [Op.between]: [minLat, maxLat] };
+//     } else if (minLat) {
+//         where.lat = { [Op.gte]: minLat };
+//     } else if (maxLat) {
+//         where.lat = { [Op.lte]: maxLat };
+//     }
 
-    if (minLng && maxLng) {
-        where.lng = { [Op.between]: [minLng, maxLng] };
-    } else if (minLng) {
-        where.lng = { [Op.gte]: minLng };
-    } else if (maxLng) {
-        where.lng = { [Op.lte]: maxLng };
-    }
+//     if (minLng && maxLng) {
+//         where.lng = { [Op.between]: [minLng, maxLng] };
+//     } else if (minLng) {
+//         where.lng = { [Op.gte]: minLng };
+//     } else if (maxLng) {
+//         where.lng = { [Op.lte]: maxLng };
+//     }
 
-    if (minPrice && maxPrice) {
-        where.price = { [Op.between]: [minPrice, maxPrice] };
-    } else if (minPrice) {
-        where.price = { [Op.gte]: minPrice };
-    } else if (maxPrice) {
-        where.price = { [Op.lte]: maxPrice };
-    }
+//     if (minPrice && maxPrice) {
+//         where.price = { [Op.between]: [minPrice, maxPrice] };
+//     } else if (minPrice) {
+//         where.price = { [Op.gte]: minPrice };
+//     } else if (maxPrice) {
+//         where.price = { [Op.lte]: maxPrice };
+//     }
 
-    if (size > 20) size = 20;
+//     if (size > 20) size = 20;
 
-    pagination.limit = size;
-    pagination.offset = size * (page - 1);
+//     pagination.limit = size;
+//     pagination.offset = size * (page - 1);
 
-    const paginatedSpots = await Spot.findAll({
-        where: {
-            ...where
-        },
-        ...pagination,
-        include: [
-            {
-                model: Review,
-                attributes: [["stars", "avgRating"]]
-            },
-            {
-                model: SpotImage,
-                where: {
-                    preview: true
-                },
-                attributes: [["url", "previewImage"]]
-            }
-        ]
-    });
+//     const paginatedSpots = await Spot.findAll({
+//         where: {
+//             ...where
+//         },
+//         ...pagination,
+//         include: [
+//             {
+//                 model: Review,
+//                 attributes: [["stars", "avgRating"]]
+//             },
+//             {
+//                 model: SpotImage,
+//                 where: {
+//                     preview: true
+//                 },
+//                 attributes: [["url", "previewImage"]]
+//             }
+//         ]
+//     });
 
-    const result = [];
-    paginatedSpots.forEach(async (spotObj) => {
-        const jsonSpotObject = spotObj.toJSON();
-        const spotPreviewImage = spotObj.dataValues.SpotImages[0].dataValues.previewImage;
+//     const result = [];
+//     paginatedSpots.forEach(async (spotObj) => {
+//         const jsonSpotObject = spotObj.toJSON();
+//         const spotPreviewImage = spotObj.dataValues.SpotImages[0].dataValues.previewImage;
 
-        let sumOfRatings = 0;
+//         let sumOfRatings = 0;
 
-        // get the sum of all the ratings for this spot
-        jsonSpotObject.Reviews.forEach((review) => {
-            sumOfRatings += review.avgRating;
-        });
+//         // get the sum of all the ratings for this spot
+//         jsonSpotObject.Reviews.forEach((review) => {
+//             sumOfRatings += review.avgRating;
+//         });
 
-        // get the total count of reviews for this spot
-        const reviewsCount = jsonSpotObject.Reviews.length;
+//         // get the total count of reviews for this spot
+//         const reviewsCount = jsonSpotObject.Reviews.length;
 
-        // calculate the avgRating
-        jsonSpotObject.avgRating = sumOfRatings / reviewsCount;
+//         // calculate the avgRating
+//         jsonSpotObject.avgRating = sumOfRatings / reviewsCount;
 
-        completeSpotObject = {
-            id: spotObj.id,
-            ownerId: spotObj.ownerId,
-            address: spotObj.address,
-            city: spotObj.city,
-            state: spotObj.state,
-            country: spotObj.country,
-            lat: Number(spotObj.lat),
-            lng: Number(spotObj.lng),
-            name: spotObj.name,
-            description: spotObj.description,
-            price: Number(spotObj.price),
-            createdAt: spotObj.createdAt,
-            updatedAt: spotObj.updatedAt,
-            avgRating: jsonSpotObject.avgRating || null,
-            previewImage: spotPreviewImage
-        };
+//         completeSpotObject = {
+//             id: spotObj.id,
+//             ownerId: spotObj.ownerId,
+//             address: spotObj.address,
+//             city: spotObj.city,
+//             state: spotObj.state,
+//             country: spotObj.country,
+//             lat: Number(spotObj.lat),
+//             lng: Number(spotObj.lng),
+//             name: spotObj.name,
+//             description: spotObj.description,
+//             price: Number(spotObj.price),
+//             createdAt: spotObj.createdAt,
+//             updatedAt: spotObj.updatedAt,
+//             avgRating: jsonSpotObject.avgRating || null,
+//             previewImage: spotPreviewImage
+//         };
 
-        result.push(completeSpotObject);
-    });
+//         result.push(completeSpotObject);
+//     });
 
-    return res.json({
-        "Spots": result,
-        page: Number(page),
-        size: Number(size)
-    });
-});
+//     return res.json({
+//         "Spots": result,
+//         page: Number(page),
+//         size: Number(size)
+//     });
+// });
 
 //Create spot image
   router.post('/:spotId/images', requireAuth, async(req, res) => {
@@ -590,7 +590,6 @@ router.get("/", async (req, res) => {
 
       const currentSpot = await Spot.findByPk(req.params.spotId);
 
-      console.log('WHY IS THIS NOT WORKING');
       if (currentSpot.ownerId === user.id) {
         return res.status(403).json({ message: "Owner Cannot Book Their Own Spot" });
       }
@@ -744,37 +743,7 @@ router.put('/:spotId', requireAuth, async (req, res) => {
   }
 });
 
-// // confirming that user owns the spot:
-// if (user.id !== spot.ownerId) {
-//   res.status(403);
-//   return res.json({message: "Only owner can add an image"})
-//   }
-
-
 //DELETE A SPOT
-// router.delete('/:spotId/', requireAuth, async (req, res) => {
-//   const { spotId, imageId } = req.params;
-
-
-
-//   const spot = await Spot.findByPk(spotId);
-//   if (!spot) {
-//     return res.status(404).json({ message: 'Spot not found' });
-//   }
-
-//   if (spot.ownerId !== req.user.id) {
-//     return res.status(403).json({ message: 'You are not authorized to delete this image' });
-//   }
-
-//   const deletedImage = await SpotImage.destroy({ where: { id: imageId } });
-
-//   if (!deletedImage) {
-//     return res.status(404).json({ message: 'Image not found' });
-//   }
-
-//   return res.status(200).json({ message: 'Image successfully deleted' });
-// });
-
 router.delete('/:spotId', requireAuth, async(req, res) => {
   const spotId = req.params.spotId;
   const userId = req.user.id;
@@ -791,6 +760,7 @@ router.delete('/:spotId', requireAuth, async(req, res) => {
   res.json({message: 'Successfully deleted'})
 })
 
+//GET ALL SPOTS WITH QUERY PARAMS
 router.get('/', validateQuery, async(req,res) => {
   where = {}
   let {page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice} = req.query;
