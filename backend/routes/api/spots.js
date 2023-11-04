@@ -51,41 +51,7 @@ const validateReview = [
     .withMessage('Review text is required'),
   handleValidationErrors
 ];
-// const validateQuery = [
-//   check('page')
-//     .optional()
-//     .isInt({min:1, max:10})
-//     .withMessage("Page must be greater than or equal to 1"),
-//   check('size')
-//     .optional()
-//     .isInt({min:1, max:20})
-//     .withMessage("Size must be greater than or equal to 1"),
-//   check('minLat')
-//     .optional()
-//     .isDecimal()
-//     .withMessage('Minimum latitude is invalid'),
-//   check('maxLat')
-//     .optional()
-//     .isDecimal()
-//     .withMessage("Maximum latitude is invalid"),
-//   check('minLng')
-//     .optional()
-//     .isDecimal()
-//     .withMessage("Minimum longitude is invalid"),
-//   check('maxLng')
-//     .optional()
-//     .isDecimal()
-//     .withMessage("Maximum longitude is invalid"),
-//   check('minPrice')
-//     .optional()
-//     .isDecimal({min: 0})
-//     .withMessage("Minimum price must be greater than or equal to 0"),
-//   check('maxPrice')
-//     .optional()
-//     .isDecimal({min: 0})
-//     .withMessage("Maximum price must be greater than or equal to 0"),
-//   handleValidationErrors
-// ];
+
 const validateQuery = [
   check("page")
     .optional()

@@ -104,10 +104,10 @@ module.exports = {
       state: 'Pineville',
       country: 'Pineasia',
       lat: 34.23612,
-      lng: -118.23569,
+      lng: 40.21341,
       name: 'Pine Retreat',
       description: 'Surrounded by beautiful pine trees',
-      price: 299
+      price: 51
     },
     {
       ownerId: 6,
