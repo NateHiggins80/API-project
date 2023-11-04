@@ -195,34 +195,21 @@ router.put('/:reviewId', requireAuth, async (req, res) => {
   }
 });
 
-
-
   //DELETE REVIEW
-  router.delete('/:reviewId', requireAuth, (req, res) => {
-    const { reviewId } = req.params;
+  router.delete('/:reviewId', requireAuth, async(req,res) => {
+    const reviewId = req.params.reviewId;
     const userId = req.user.id;
-
-    // Check if the review exists and belongs to the current user
-    Review.findOne({
-      where: {
-        id: reviewId,
-        userId,
-      },
-    })
-      .then((review) => {
-        if (!review) {
-          return res.status(404).json({ message: "Review couldn't be found" });
-        }
-
-        // Delete the review
-        return review.destroy().then(() => {
-          return res.status(200).json({ message: 'Successfully deleted' });
-        });
-      })
-      .catch((error) => {
-        console.error('Error deleting review:', error);
-        return res.status(500).json({ message: 'Internal Server Error' });
-      });
-  });
+    const deleteReview = await Review.findByPk(reviewId);
+    if(!deleteReview){
+        res.status(404);
+        return res.json({message: "Review couldn't be found"})
+    }
+    if(deleteReview.userId !== userId){
+        res.status(403)
+        return res.json({message: 'Not Authorized'})
+    }
+    await deleteReview.destroy();
+    res.json({message: 'Successfully deleted'})
+})
 
 module.exports = router;

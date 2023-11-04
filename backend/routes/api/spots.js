@@ -9,6 +9,84 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
+const validateSpot = [
+  check('address'),
+    exists({ checkFalsy: true }),
+    withMessage("Street address is required"),
+  check('city'),
+    exists({ checkFalsy: true }),
+    withMessage("City is required"),
+  check('state'),
+    exists({ checkFalsy: true }),
+    withMessage('State is required'),
+  check('country'),
+    exists({ checkFalsy: true }),
+    withMessage("Country is required"),
+  check('lat'),
+    exists({ checkFalsy: true }),
+    withMessage("Latitude is not valid"),
+  check('lng'),
+    exists({ checkFalsy: true }),
+    withMessage("Longitude is not valid"),
+  check('name'),
+    exists({ checkFalsy: true }),
+    isLength({ max: 50}),
+    withMessage("Name must be less than 50 characters"),
+  check('description'),
+    exists({ checkFalsy: true }),
+    withMessage("Description is required"),
+  check('price'),
+    exists({ checkFalsy: true }),
+    withMessage("Price per day is required"),
+  handleValidationErrors
+];
+const validateReview = [
+  check('stars'),
+    exists({ checkFalsy: true }),
+    isInt({min:1, max:5}),
+    withMessage('Stars must be an integer from 1 to 5'),
+    check('review'),
+    exists({ checkFalsy: true }),
+    withMessage('Review text is required'),
+  handleValidationErrors
+];
+const validateQuery = [
+  check('page'),
+    optional(),
+    isInt({min:1, max:10}),
+    withMessage("Page must be greater than or equal to 1"),
+  check('size'),
+    optional(),
+    isInt({min:1, max:20}),
+    withMessage("Size must be greater than or equal to 1"),
+  check('minLat'),
+    optional(),
+    isDecimal(),
+    withMessage('Minimum latitude is invalid'),
+  check('maxLat'),
+    optional(),
+    isDecimal(),
+    withMessage("Maximum latitude is invalid"),
+  check('minLng'),
+    optional(),
+    isDecimal(),
+    withMessage("Minimum longitude is invalid"),
+  check('maxLng'),
+    optional(),
+    isDecimal(),
+    withMessage("Maximum longitude is invalid"),
+  check('minPrice'),
+    optional(),
+    isDecimal({min: 0}),
+    withMessage("Minimum price must be greater than or equal to 0"),
+  check('maxPrice'),
+    optional(),
+    isDecimal({min: 0}),
+    withMessage("Maximum price must be greater than or equal to 0"),
+  handleValidationErrors
+];
+
+
 //Create a Spot Review
 router.post('/:spotId/reviews', requireAuth, async (req, res) => {
   const { review, stars } = req.body;
@@ -696,34 +774,76 @@ router.put('/:spotId', requireAuth, async (req, res) => {
 //   return res.status(200).json({ message: 'Image successfully deleted' });
 // });
 
-router.delete('/:spotId', requireAuth, async (req, res) => {
-  try {
-    const { user } = req;
-    const spotToDelete = await Spot.findByPk(req.params.spotId);
-
-    if (!spotToDelete) {
-      return res.status(404).json({ message: "Spot couldn't be found" });
-    }
-
-    const ownerId = spotToDelete.dataValues.ownerId;
-
-    // Authorization check
-    if (user.id === ownerId) {
-      await spotToDelete.destroy();
-      res.status(200).json({
-        message: "Successfully deleted",
-      });
-    } else {
-      return res.status(403).json({
-        message: "Forbidden",
-      });
-    }
-  } catch (error) {
-    console.error('Error deleting spot:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+router.delete('/:spotId', requireAuth, async(req, res) => {
+  const spotId = req.params.spotId;
+  const userId = req.user.id;
+  const deleteSpot = await Spot.findByPk(spotId);
+  if(!deleteSpot){
+    res.status(404);
+    return res.json({message: "Spot couldn't be found"})
+  };
+  if(deleteSpot.ownerId !== userId){
+    res.status(403);
+    return res.json({message: 'Not Authorized'})
   }
-});
+  await deleteSpot.destroy()
+  res.json({message: 'Successfully deleted'})
+})
 
+router.get('/', validateQuery, async(req,res) => {
+  where = {}
+  let {page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice} = req.query;
+  if(!page) page = 1;
+  if(!size) size = 20;
+  page = parseInt(page);
+  size = parseInt(size);
+
+  let pagination = {};
+  if(page >= 1 && size >= 1){
+    pagination.limit = size;
+    pagination.offset = size * (page - 1);
+  }
+  if(minLat) where.lat = {[Op.gte]: minLat};
+  if(maxLat) where.lat = {[Op.lte]: maxLat};
+  if(minLng) where.lng = {[Op.gte]: minLng};
+  if(maxLng) where.lng = {[Op.lte]: maxLng};
+  if(minPrice) where.price = {[Op.gte]: minPrice};
+  if(maxPrice) where.price = {[Op.lte]: maxPrice};
+    const spots = await Spot.findAll({
+      where,
+      include:[{
+        model: Review
+      }, {
+        model: SpotImage
+      }],
+      ...pagination
+    });
+
+    let spotsList = [];
+    spots.forEach((spot) =>{
+      spotsList.push(spot.toJSON())
+    })
+    spotsList.forEach((spot) => {
+      let starSum = 0
+      spot.Reviews.forEach((reviews) => {
+        starSum += reviews.stars
+      })
+      let starAvg = starSum/spot.Reviews.length;
+      spot.avgRating = starAvg
+      if(spot.SpotImages.length > 0){
+        for(let image of spot.SpotImages){
+          if(image.preview == true)
+          spot.previewImage = image.url
+      }
+      };
+      spot.page = page;
+      spot.size = size;
+      delete spot.Reviews
+
+      delete spot.SpotImages
+    })
+    res.json({Spots:spotsList})
+})
 
 
 module.exports = router
