@@ -51,41 +51,207 @@ const validateReview = [
     .withMessage('Review text is required'),
   handleValidationErrors
 ];
+// const validateQuery = [
+//   check('page')
+//     .optional()
+//     .isInt({min:1, max:10})
+//     .withMessage("Page must be greater than or equal to 1"),
+//   check('size')
+//     .optional()
+//     .isInt({min:1, max:20})
+//     .withMessage("Size must be greater than or equal to 1"),
+//   check('minLat')
+//     .optional()
+//     .isDecimal()
+//     .withMessage('Minimum latitude is invalid'),
+//   check('maxLat')
+//     .optional()
+//     .isDecimal()
+//     .withMessage("Maximum latitude is invalid"),
+//   check('minLng')
+//     .optional()
+//     .isDecimal()
+//     .withMessage("Minimum longitude is invalid"),
+//   check('maxLng')
+//     .optional()
+//     .isDecimal()
+//     .withMessage("Maximum longitude is invalid"),
+//   check('minPrice')
+//     .optional()
+//     .isDecimal({min: 0})
+//     .withMessage("Minimum price must be greater than or equal to 0"),
+//   check('maxPrice')
+//     .optional()
+//     .isDecimal({min: 0})
+//     .withMessage("Maximum price must be greater than or equal to 0"),
+//   handleValidationErrors
+// ];
 const validateQuery = [
-  check('page')
+  check("page")
     .optional()
-    .isInt({min:1, max:10})
+    .isInt({ min: 1, max: 10 })
     .withMessage("Page must be greater than or equal to 1"),
-  check('size')
+  check("size")
     .optional()
-    .isInt({min:1, max:20})
+    .isInt({ min: 1, max: 20 })
     .withMessage("Size must be greater than or equal to 1"),
-  check('minLat')
+  check("minLat")
     .optional()
     .isDecimal()
-    .withMessage('Minimum latitude is invalid'),
-  check('maxLat')
+    .withMessage("Minimum latitude is invalid")
+    .custom((val) => {
+      if (val <= -90 || val >= 90) return false;
+      else return true;
+    })
+    .withMessage("Minimum latitude is invalid"),
+  check("maxLat")
     .optional()
     .isDecimal()
-    .withMessage("Maximum latitude is invalid"),
-  check('minLng')
+    .withMessage("Maximum latitude is invalid")
+    .custom((val) => {
+      if (val <= -90 || val >= 90) return false;
+      else return true;
+    })
+    .withMessage("Maximum latitude is invalid")
+    .custom((val, { req }) => {
+      if (req.params.minLat !== undefined) {
+        if (req.params.minLat > val) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .withMessage("minLat must be less than or equal to maxLat"),
+  check("minLng")
     .optional()
-    .isDecimal()
+    .isDecimal({ min: -180, max: 180 })
+    .withMessage("Minimum longitude is invalid")
+    .custom((val) => {
+      if (val <= -180 || val >= 180) return false;
+      else return true;
+    })
     .withMessage("Minimum longitude is invalid"),
-  check('maxLng')
+  check("maxLng")
+    .optional()
+    .isDecimal({ min: -180, max: 180 })
+    .withMessage("Maximum longitude is invalid")
+    .custom((val) => {
+      if (val <= -180 || val >= 180) return false;
+      else return true;
+    })
+    .withMessage("Maximum longitude is invalid")
+    .custom((val, { req }) => {
+      if (req.params.minLng !== undefined) {
+        if (req.params.minLng > val) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .withMessage("minLng must be less than or equal to maxLng"),
+  check("minPrice")
     .optional()
     .isDecimal()
-    .withMessage("Maximum longitude is invalid"),
-  check('minPrice')
-    .optional()
-    .isDecimal({min: 0})
+    .custom((val) => {
+      if (val < 0) return false;
+      else return true;
+    })
     .withMessage("Minimum price must be greater than or equal to 0"),
-  check('maxPrice')
+  check("maxPrice")
     .optional()
-    .isDecimal({min: 0})
-    .withMessage("Maximum price must be greater than or equal to 0"),
-  handleValidationErrors
+    .isDecimal()
+    .custom((val) => {
+      if (val < 0) return false;
+      else return true;
+    })
+    .withMessage("Maximum price must be greater than or equal to 0")
+    .custom((val, { req }) => {
+      if (req.params.minPrice !== undefined) {
+        if (req.params.minPrice > val) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .withMessage("Minimum price must be less than or equal to Maximum price"),
+  handleValidationErrors,
 ];
+
+// Get all spots
+router.get("/", validateQuery, async (req, res) => {
+  const { page, size, maxLat, minLat, maxLng, minLng, minPrice, maxPrice } =
+    req.query;
+  let queryFilter = {};
+
+  if (size === undefined) {
+    queryFilter.limit = 20;
+  } else {
+    queryFilter.limit = Number(size);
+  }
+
+  if (page === undefined) {
+    queryFilter.offset = 0;
+  } else {
+    queryFilter.offset = (page - 1) * queryFilter.limit;
+  }
+
+  queryFilter.where = {
+    lng: {
+      [Op.between]: [
+        minLng !== undefined ? minLng : -180,
+        maxLng !== undefined ? maxLng : 180,
+      ],
+    },
+    lat: {
+      [Op.between]: [
+        minLat !== undefined ? minLat : -90,
+        maxLat !== undefined ? maxLat : 90,
+      ],
+    },
+    price: {
+      [Op.between]: [
+        minPrice !== undefined ? minPrice : 0,
+        maxPrice !== undefined ? maxPrice : 1000000000,
+      ],
+    },
+  };
+
+  const spots = await Spot.findAll(queryFilter);
+
+  for (let spot of spots) {
+    previewImage = await SpotImage.findOne({
+      where: {
+        spotId: Number(spot.id),
+        preview: true,
+      },
+      attributes: ["url"],
+    });
+    if (previewImage) {
+      spot.dataValues.previewImage = previewImage.dataValues.url;
+    } else {
+      spot.dataValues.previewImage = null;
+    }
+
+    const reviews = await Review.findAndCountAll({
+      where: {
+        spotId: Number(spot.id),
+      },
+      attributes: ["stars"],
+    });
+
+    const reviewSum = reviews.rows.reduce((accum, curr) => {
+      return (accum = accum + curr.dataValues.stars);
+    }, 0);
+    avgRating = reviewSum / reviews.count;
+    spot.dataValues.avgRating = avgRating;
+  }
+
+  return res.json({
+    Spots: spots,
+    page: queryFilter.offset / queryFilter.limit + 1,
+    size: queryFilter.limit,
+  });
+});
 
 
 //Create a Spot Review
@@ -760,156 +926,156 @@ router.delete('/:spotId', requireAuth, async(req, res) => {
   res.json({message: 'Successfully deleted'})
 })
 
-//GET ALL SPOTS WITH QUERY PARAMS
+// //GET ALL SPOTS WITH QUERY PARAMS
 
-router.get("/", async (req, res) => {
+// router.get("/", async (req, res) => {
 
-  const { page = 1, size = 20, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+//   const { page = 1, size = 20, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
 
-  const paginationErrors = {};
+//   const paginationErrors = {};
 
-  if (isNaN(+size) + size < 1 + size > 20) {
-      paginationErrors.size = "Page must be greater than or equal to 1";
-  }
+//   if (isNaN(+size) + size < 1 + size > 20) {
+//       paginationErrors.size = "Page must be greater than or equal to 1";
+//   }
 
-  if (isNaN(+page) + page < 1 + page > 10) {
-      paginationErrors.page = "Page must be greater than or equal to 1";
-  }
+//   if (isNaN(+page) + page < 1 + page > 10) {
+//       paginationErrors.page = "Page must be greater than or equal to 1";
+//   }
 
-  if (maxLat && isNaN(+maxLat)) {
-      paginationErrors.maxLat = "Maximum latitude is invalid";
-  }
+//   if (maxLat && isNaN(+maxLat)) {
+//       paginationErrors.maxLat = "Maximum latitude is invalid";
+//   }
 
-  if (minLat && isNaN(+minLat)) {
-      paginationErrors.minLat = "Minimum latitude is invalid";
-  }
+//   if (minLat && isNaN(+minLat)) {
+//       paginationErrors.minLat = "Minimum latitude is invalid";
+//   }
 
-  if (maxLng && isNaN(+maxLng)) {
-      paginationErrors.maxLng = "Maximum longitude is invalid";
-  }
+//   if (maxLng && isNaN(+maxLng)) {
+//       paginationErrors.maxLng = "Maximum longitude is invalid";
+//   }
 
-  if (minLng && isNaN(+minLng)) {
-      paginationErrors.minLng = "Minimum longitude is invalid";
-  }
+//   if (minLng && isNaN(+minLng)) {
+//       paginationErrors.minLng = "Minimum longitude is invalid";
+//   }
 
-  if (maxPrice && isNaN(+maxPrice) + maxPrice < 0) {
-      paginationErrors.maxPrice = "Maximum price must be greater than or equal to 0";
-  }
+//   if (maxPrice && isNaN(+maxPrice) + maxPrice < 0) {
+//       paginationErrors.maxPrice = "Maximum price must be greater than or equal to 0";
+//   }
 
-  if (minPrice && isNaN(+minPrice) + minPrice < 0) {
-      paginationErrors.minPrice = "Minimum price must be greater than or equal to 0";
-  }
+//   if (minPrice && isNaN(+minPrice) + minPrice < 0) {
+//       paginationErrors.minPrice = "Minimum price must be greater than or equal to 0";
+//   }
 
-  if (
-      paginationErrors.page ||
-      paginationErrors.size ||
-      paginationErrors.minLat ||
-      paginationErrors.maxLat ||
-      paginationErrors.minLng ||
-      paginationErrors.maxLng ||
-      paginationErrors.minPrice ||
-      paginationErrors.maxPrice
-  ) {
-      res.status(400).json({
-          "message": "Bad Request",
-          "errors": paginationErrors
-      });
-  }
+//   if (
+//       paginationErrors.page ||
+//       paginationErrors.size ||
+//       paginationErrors.minLat ||
+//       paginationErrors.maxLat ||
+//       paginationErrors.minLng ||
+//       paginationErrors.maxLng ||
+//       paginationErrors.minPrice ||
+//       paginationErrors.maxPrice
+//   ) {
+//       res.status(400).json({
+//           "message": "Bad Request",
+//           "errors": paginationErrors
+//       });
+//   }
 
-  const where = {};
-  const pagination = {};
+//   const where = {};
+//   const pagination = {};
 
-  if (minLat && maxLat) {
-      where.lat = { [Op.between]: [minLat, maxLat] };
-  } else if (minLat) {
-      where.lat = { [Op.gte]: minLat };
-  } else if (maxLat) {
-      where.lat = { [Op.lte]: maxLat };
-  }
+//   if (minLat && maxLat) {
+//       where.lat = { [Op.between]: [minLat, maxLat] };
+//   } else if (minLat) {
+//       where.lat = { [Op.gte]: minLat };
+//   } else if (maxLat) {
+//       where.lat = { [Op.lte]: maxLat };
+//   }
 
-  if (minLng && maxLng) {
-      where.lng = { [Op.between]: [minLng, maxLng] };
-  } else if (minLng) {
-      where.lng = { [Op.gte]: minLng };
-  } else if (maxLng) {
-      where.lng = { [Op.lte]: maxLng };
-  }
+//   if (minLng && maxLng) {
+//       where.lng = { [Op.between]: [minLng, maxLng] };
+//   } else if (minLng) {
+//       where.lng = { [Op.gte]: minLng };
+//   } else if (maxLng) {
+//       where.lng = { [Op.lte]: maxLng };
+//   }
 
-  if (minPrice && maxPrice) {
-      where.price = { [Op.between]: [minPrice, maxPrice] };
-  } else if (minPrice) {
-      where.price = { [Op.gte]: minPrice };
-  } else if (maxPrice) {
-      where.price = { [Op.lte]: maxPrice };
-  }
+//   if (minPrice && maxPrice) {
+//       where.price = { [Op.between]: [minPrice, maxPrice] };
+//   } else if (minPrice) {
+//       where.price = { [Op.gte]: minPrice };
+//   } else if (maxPrice) {
+//       where.price = { [Op.lte]: maxPrice };
+//   }
 
-  if (size > 20) size = 20;
+//   if (size > 20) size = 20;
 
-  pagination.limit = size;
-  pagination.offset = size * (page - 1);
+//   pagination.limit = size;
+//   pagination.offset = size * (page - 1);
 
-  const paginatedSpots = await Spot.findAll({
-      where: {
-          ...where
-      },
-      ...pagination,
-      include: [
-          {
-              model: Review,
-              attributes: [["stars", "avgRating"]]
-          },
-          {
-              model: SpotImage,
-              where: {
-                  preview: true
-              },
-              attributes: [["url", "previewImage"]]
-          }
-      ]
-  });
+//   const paginatedSpots = await Spot.findAll({
+//       where: {
+//           ...where
+//       },
+//       ...pagination,
+//       include: [
+//           {
+//               model: Review,
+//               attributes: [["stars", "avgRating"]]
+//           },
+//           {
+//               model: SpotImage,
+//               where: {
+//                   preview: true
+//               },
+//               attributes: [["url", "previewImage"]]
+//           }
+//       ]
+//   });
 
-  const result = [];
-  paginatedSpots.forEach(async (spotObj) => {
-      const jsonSpotObject = spotObj.toJSON();
-      const spotPreviewImage = spotObj.dataValues.SpotImages[0].dataValues.previewImage;
+//   const result = [];
+//   paginatedSpots.forEach(async (spotObj) => {
+//       const jsonSpotObject = spotObj.toJSON();
+//       const spotPreviewImage = spotObj.dataValues.SpotImages[0].dataValues.previewImage;
 
-      let sumOfRatings = 0;
+//       let sumOfRatings = 0;
 
-      jsonSpotObject.Reviews.forEach((review) => {
-          sumOfRatings += review.avgRating;
-      });
+//       jsonSpotObject.Reviews.forEach((review) => {
+//           sumOfRatings += review.avgRating;
+//       });
 
-      const reviewsCount = jsonSpotObject.Reviews.length;
+//       const reviewsCount = jsonSpotObject.Reviews.length;
 
-      jsonSpotObject.avgRating = sumOfRatings / reviewsCount;
+//       jsonSpotObject.avgRating = sumOfRatings / reviewsCount;
 
-      completeSpotObject = {
-          id: spotObj.id,
-          ownerId: spotObj.ownerId,
-          address: spotObj.address,
-          city: spotObj.city,
-          state: spotObj.state,
-          country: spotObj.country,
-          lat: Number(spotObj.lat),
-          lng: Number(spotObj.lng),
-          name: spotObj.name,
-          description: spotObj.description,
-          price: Number(spotObj.price),
-          createdAt: spotObj.createdAt,
-          updatedAt: spotObj.updatedAt,
-          avgRating: jsonSpotObject.avgRating || null,
-          previewImage: spotPreviewImage
-      };
+//       completeSpotObject = {
+//           id: spotObj.id,
+//           ownerId: spotObj.ownerId,
+//           address: spotObj.address,
+//           city: spotObj.city,
+//           state: spotObj.state,
+//           country: spotObj.country,
+//           lat: Number(spotObj.lat),
+//           lng: Number(spotObj.lng),
+//           name: spotObj.name,
+//           description: spotObj.description,
+//           price: Number(spotObj.price),
+//           createdAt: spotObj.createdAt,
+//           updatedAt: spotObj.updatedAt,
+//           avgRating: jsonSpotObject.avgRating || null,
+//           previewImage: spotPreviewImage
+//       };
 
-      result.push(completeSpotObject);
-  });
+//       result.push(completeSpotObject);
+//   });
 
-  return res.json({
-      "Spots": result,
-      page: Number(page),
-      size: Number(size)
-  });
-});
+//   return res.json({
+//       "Spots": result,
+//       page: Number(page),
+//       size: Number(size)
+//   });
+// });
 
 // router.get('/', validateQuery, async(req,res) => {
 //   where = {}
