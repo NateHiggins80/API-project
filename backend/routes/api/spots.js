@@ -310,6 +310,7 @@ router.get("/:spotId/reviews", async (req, res) => {
   }
 });
 
+//GET BOOKINGS BY SPOTID
 router.get('/:spotId/bookings', requireAuth, async (req, res) => {
   const { spotId } = req.params;
   const spot = await Spot.findByPk(spotId);
@@ -438,7 +439,6 @@ router.get('/:spotId', async(req, res) => {
             },
             {
                 model: User,
-                as: 'Owner',
                 attributes: ['id', 'firstName', 'lastName']
             },
 
