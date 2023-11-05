@@ -1,6 +1,6 @@
 'use strict';
 const {
-  Model
+  Model, User
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Spot extends Model {
@@ -11,75 +11,66 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Spot.belongsTo(models.User, {
-        as: "Owner",
-        foreignKey: "ownerId",
-        OnDelete: "CASCADE",
-        hooks: true
-      });
-      Spot.hasMany(models.SpotImage, {
-        foreignKey: "spotId",
-        onDelete: "CASCADE",
-        hooks: true
-      });
-      Spot.hasMany(models.Review, {
-        foreignKey: "spotId"
-      });
-      Spot.hasMany(models.Booking, {
-        foreignKey: 'spotId',
-        onDelete: 'CASCADE'
-      });
+      Spot.hasMany(
+        models.SpotImage,
+        {foreignKey: 'spotId', onDelete: 'CASCADE', hooks: true}
+      )
+      Spot.belongsTo(
+        models.User,
+        {foreignKey: 'ownerId'},
+      );
+      Spot.hasMany(
+        models.Booking,
+        {foreignKey: 'spotId', onDelete: 'CASCADE', hooks: true}
+      );
+      Spot.hasMany(
+        models.Review,
+        {foreignKey: 'spotId', onDelete: 'CASCADE', hooks: true }
+      )
     }
   }
   Spot.init({
     ownerId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: true
+      type:DataTypes.INTEGER,
+      allowNull: false
     },
     address: {
-      type: DataTypes.STRING(255),
+      type:DataTypes.STRING,
       allowNull: false
     },
     city: {
-      type: DataTypes.STRING(255),
+      type:DataTypes.STRING,
       allowNull: false
     },
     state: {
-      type: DataTypes.STRING(255),
+      type:DataTypes.STRING,
       allowNull: false
     },
     country: {
-      type: DataTypes.STRING(255),
+      type:DataTypes.STRING,
       allowNull: false
     },
     lat: {
-      type: DataTypes.DECIMAL,
+      type:DataTypes.DECIMAL,
       allowNull: false
     },
     lng: {
-      type: DataTypes.DECIMAL,
+      type:DataTypes.DECIMAL,
       allowNull: false
     },
     name: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      validate: {
-        len: [1, 50]
-      }
+      type:DataTypes.STRING,
+      allowNull: false
     },
     description: {
-      type: DataTypes.STRING(500),
+      type:DataTypes.STRING,
       allowNull: false
     },
     price: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-
-},
-
-{
+      type:DataTypes.DECIMAL,
+      allowNull: false
+    }
+  }, {
     sequelize,
     modelName: 'Spot',
   });
